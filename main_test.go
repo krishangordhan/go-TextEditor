@@ -96,3 +96,70 @@ func TestString_ReturnsUnicode(t *testing.T) {
 		t.Errorf("Expected String() to return %q, got %q", text, result)
 	}
 }
+
+func TestInsert_AtBeginning(t *testing.T) {
+	pt := NewPieceTable("World")
+	pt.Insert(0, "Hello ")
+
+	result := pt.String()
+	expected := "Hello World"
+	if result != expected {
+		t.Errorf("Expected %q, got %q", expected, result)
+	}
+}
+
+func TestInsert_AtEnd(t *testing.T) {
+	pt := NewPieceTable("Hello")
+	pt.Insert(5, " World")
+
+	result := pt.String()
+	expected := "Hello World"
+	if result != expected {
+		t.Errorf("Expected %q, got %q", expected, result)
+	}
+}
+
+func TestInsert_InMiddle(t *testing.T) {
+	pt := NewPieceTable("Hello World")
+	pt.Insert(6, "Beautiful ")
+
+	result := pt.String()
+	expected := "Hello Beautiful World"
+	if result != expected {
+		t.Errorf("Expected %q, got %q", expected, result)
+	}
+}
+
+func TestInsert_Multiple(t *testing.T) {
+	pt := NewPieceTable("ac")
+	pt.Insert(1, "b")
+	pt.Insert(3, "d")
+
+	result := pt.String()
+	expected := "abcd"
+	if result != expected {
+		t.Errorf("Expected %q, got %q", expected, result)
+	}
+}
+
+func TestInsert_EmptyString(t *testing.T) {
+	pt := NewPieceTable("Hello")
+	pt.Insert(2, "")
+
+	result := pt.String()
+	expected := "Hello"
+	if result != expected {
+		t.Errorf("Expected %q, got %q", expected, result)
+	}
+}
+
+func TestInsert_Unicode(t *testing.T) {
+	pt := NewPieceTable("Hello ")
+	pt.Insert(6, "世界 🌍")
+
+	result := pt.String()
+	expected := "Hello 世界 🌍"
+	if result != expected {
+		t.Errorf("Expected %q, got %q", expected, result)
+	}
+}
