@@ -67,3 +67,32 @@ func TestNewPieceTable_UnicodeText(t *testing.T) {
 		t.Errorf("Expected piece length to be %d, got %d", expectedRuneCount, pt.pieces[0].length)
 	}
 }
+
+func TestString_ReturnsText(t *testing.T) {
+	text := "Hello World"
+	pt := NewPieceTable(text)
+
+	result := pt.String()
+	if result != text {
+		t.Errorf("Expected String() to return %q, got %q", text, result)
+	}
+}
+
+func TestString_ReturnsEmpty(t *testing.T) {
+	pt := NewPieceTable("")
+
+	result := pt.String()
+	if result != "" {
+		t.Errorf("Expected String() to return empty string, got %q", result)
+	}
+}
+
+func TestString_ReturnsUnicode(t *testing.T) {
+	text := "Hello 世界 🌍"
+	pt := NewPieceTable(text)
+
+	result := pt.String()
+	if result != text {
+		t.Errorf("Expected String() to return %q, got %q", text, result)
+	}
+}

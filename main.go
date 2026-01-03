@@ -36,3 +36,24 @@ func NewPieceTable(text string) *PieceTable {
 
 	return pt
 }
+
+func (pt *PieceTable) String() string {
+	totalLength := 0
+	for _, piece := range pt.pieces {
+		totalLength += piece.length
+	}
+
+	result := make([]rune, 0, totalLength)
+	for _, piece := range pt.pieces {
+		var buffer []rune
+		if piece.bufferType == Original {
+			buffer = pt.original
+		} else {
+			buffer = pt.add
+		}
+
+		result = append(result, buffer[piece.start:piece.start+piece.length]...)
+	}
+
+	return string(result)
+}
