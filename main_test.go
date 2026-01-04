@@ -163,3 +163,81 @@ func TestInsert_Unicode(t *testing.T) {
 		t.Errorf("Expected %q, got %q", expected, result)
 	}
 }
+
+func TestDelete_FromBeginning(t *testing.T) {
+	pt := NewPieceTable("Hello World")
+	pt.Delete(0, 6)
+
+	result := pt.String()
+	expected := "World"
+	if result != expected {
+		t.Errorf("Expected %q, got %q", expected, result)
+	}
+}
+
+func TestDelete_FromEnd(t *testing.T) {
+	pt := NewPieceTable("Hello World")
+	pt.Delete(5, 6)
+
+	result := pt.String()
+	expected := "Hello"
+	if result != expected {
+		t.Errorf("Expected %q, got %q", expected, result)
+	}
+}
+
+func TestDelete_FromMiddle(t *testing.T) {
+	pt := NewPieceTable("Hello Beautiful World")
+	pt.Delete(6, 10) // Remove "Beautiful "
+
+	result := pt.String()
+	expected := "Hello World"
+	if result != expected {
+		t.Errorf("Expected %q, got %q", expected, result)
+	}
+}
+
+func TestDelete_EntireText(t *testing.T) {
+	pt := NewPieceTable("Hello")
+	pt.Delete(0, 5)
+
+	result := pt.String()
+	expected := ""
+	if result != expected {
+		t.Errorf("Expected %q, got %q", expected, result)
+	}
+}
+
+func TestDelete_PartialPiece(t *testing.T) {
+	pt := NewPieceTable("Hello World")
+	pt.Delete(2, 3) // Remove "llo"
+
+	result := pt.String()
+	expected := "He World"
+	if result != expected {
+		t.Errorf("Expected %q, got %q", expected, result)
+	}
+}
+
+func TestDelete_ZeroLength(t *testing.T) {
+	pt := NewPieceTable("Hello")
+	pt.Delete(2, 0)
+
+	result := pt.String()
+	expected := "Hello"
+	if result != expected {
+		t.Errorf("Expected %q, got %q", expected, result)
+	}
+}
+
+func TestDelete_AfterInsert(t *testing.T) {
+	pt := NewPieceTable("Hello World")
+	pt.Insert(6, "Beautiful ")
+	pt.Delete(0, 6)
+
+	result := pt.String()
+	expected := "Beautiful World"
+	if result != expected {
+		t.Errorf("Expected %q, got %q", expected, result)
+	}
+}

@@ -106,3 +106,56 @@ func (pt *PieceTable) Insert(offset int, text string) {
 
 	pt.pieces = append(pt.pieces, newPiece)
 }
+
+func (pt *PieceTable) Delete(offset, length int) {
+	if length == 0 {
+		return
+	}
+
+	deleteEnd := offset + length
+	currentPos := 0
+	newPieces := []Piece{}
+
+	for _, piece := range pt.pieces {
+		pieceStart := currentPos
+		pieceEnd := currentPos + piece.length
+
+		if pieceEnd <= offset {
+			newPieces = append(newPieces, piece)
+			currentPos = pieceEnd
+			continue
+		}
+
+		if pieceStart >= deleteEnd {
+			newPieces = append(newPieces, piece)
+			currentPos = pieceEnd
+			continue
+		}
+
+		overlapStart := max(pieceStart, offset)
+		overlapEnd := min(pieceEnd, deleteEnd)
+
+		if overlapStart > pieceStart {
+			leftLength := overlapStart - pieceStart
+			newPieces = append(newPieces, Piece{
+				bufferType: piece.bufferType,
+				start:      piece.start,
+				length:     leftLength,
+			})
+		}
+
+		if overlapEnd < pieceEnd {
+			rightStart := piece.start + (overlapEnd - pieceStart)
+			rightLength := pieceEnd - overlapEnd
+			newPieces = append(newPieces, Piece{
+				bufferType: piece.bufferType,
+				start:      rightStart,
+				length:     rightLength,
+			})
+		}
+
+		currentPos = pieceEnd
+	}
+
+	pt.pieces = newPieces
+}
