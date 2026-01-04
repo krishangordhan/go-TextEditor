@@ -68,7 +68,7 @@ func TestNewPieceTable_UnicodeText(t *testing.T) {
 	}
 }
 
-func TestString_ReturnsText(t *testing.T) {
+func TestPieceTable_String(t *testing.T) {
 	text := "Hello World"
 	pt := NewPieceTable(text)
 
@@ -78,7 +78,7 @@ func TestString_ReturnsText(t *testing.T) {
 	}
 }
 
-func TestString_ReturnsEmpty(t *testing.T) {
+func TestPieceTable_String_Empty(t *testing.T) {
 	pt := NewPieceTable("")
 
 	result := pt.String()
@@ -87,7 +87,7 @@ func TestString_ReturnsEmpty(t *testing.T) {
 	}
 }
 
-func TestString_ReturnsUnicode(t *testing.T) {
+func TestPieceTable_String_Unicode(t *testing.T) {
 	text := "Hello 世界 🌍"
 	pt := NewPieceTable(text)
 
@@ -97,7 +97,33 @@ func TestString_ReturnsUnicode(t *testing.T) {
 	}
 }
 
-func TestInsert_AtBeginning(t *testing.T) {
+func TestPieceTable_Length(t *testing.T) {
+	pt := NewPieceTable("Hello")
+
+	if pt.Length() != 5 {
+		t.Errorf("Expected length 5, got %d", pt.Length())
+	}
+}
+
+func TestPieceTable_Length_AfterInsert(t *testing.T) {
+	pt := NewPieceTable("Hello")
+	pt.Insert(5, " World")
+
+	if pt.Length() != 11 {
+		t.Errorf("Expected length 11, got %d", pt.Length())
+	}
+}
+
+func TestPieceTable_Length_AfterDelete(t *testing.T) {
+	pt := NewPieceTable("Hello World")
+	pt.Delete(5, 6)
+
+	if pt.Length() != 5 {
+		t.Errorf("Expected length 5, got %d", pt.Length())
+	}
+}
+
+func TestPieceTable_Insert_AtBeginning(t *testing.T) {
 	pt := NewPieceTable("World")
 	pt.Insert(0, "Hello ")
 
@@ -108,7 +134,7 @@ func TestInsert_AtBeginning(t *testing.T) {
 	}
 }
 
-func TestInsert_AtEnd(t *testing.T) {
+func TestPieceTable_Insert_AtEnd(t *testing.T) {
 	pt := NewPieceTable("Hello")
 	pt.Insert(5, " World")
 
@@ -119,7 +145,7 @@ func TestInsert_AtEnd(t *testing.T) {
 	}
 }
 
-func TestInsert_InMiddle(t *testing.T) {
+func TestPieceTable_Insert_InMiddle(t *testing.T) {
 	pt := NewPieceTable("Hello World")
 	pt.Insert(6, "Beautiful ")
 
@@ -130,7 +156,7 @@ func TestInsert_InMiddle(t *testing.T) {
 	}
 }
 
-func TestInsert_Multiple(t *testing.T) {
+func TestPieceTable_Insert_Multiple(t *testing.T) {
 	pt := NewPieceTable("ac")
 	pt.Insert(1, "b")
 	pt.Insert(3, "d")
@@ -142,7 +168,7 @@ func TestInsert_Multiple(t *testing.T) {
 	}
 }
 
-func TestInsert_EmptyString(t *testing.T) {
+func TestPieceTable_Insert_EmptyString(t *testing.T) {
 	pt := NewPieceTable("Hello")
 	pt.Insert(2, "")
 
@@ -153,7 +179,7 @@ func TestInsert_EmptyString(t *testing.T) {
 	}
 }
 
-func TestInsert_Unicode(t *testing.T) {
+func TestPieceTable_Insert_Unicode(t *testing.T) {
 	pt := NewPieceTable("Hello ")
 	pt.Insert(6, "世界 🌍")
 
@@ -164,7 +190,7 @@ func TestInsert_Unicode(t *testing.T) {
 	}
 }
 
-func TestDelete_FromBeginning(t *testing.T) {
+func TestPieceTable_Delete_FromBeginning(t *testing.T) {
 	pt := NewPieceTable("Hello World")
 	pt.Delete(0, 6)
 
@@ -175,7 +201,7 @@ func TestDelete_FromBeginning(t *testing.T) {
 	}
 }
 
-func TestDelete_FromEnd(t *testing.T) {
+func TestPieceTable_Delete_FromEnd(t *testing.T) {
 	pt := NewPieceTable("Hello World")
 	pt.Delete(5, 6)
 
@@ -186,9 +212,9 @@ func TestDelete_FromEnd(t *testing.T) {
 	}
 }
 
-func TestDelete_FromMiddle(t *testing.T) {
+func TestPieceTable_Delete_FromMiddle(t *testing.T) {
 	pt := NewPieceTable("Hello Beautiful World")
-	pt.Delete(6, 10) // Remove "Beautiful "
+	pt.Delete(6, 10)
 
 	result := pt.String()
 	expected := "Hello World"
@@ -197,7 +223,7 @@ func TestDelete_FromMiddle(t *testing.T) {
 	}
 }
 
-func TestDelete_EntireText(t *testing.T) {
+func TestPieceTable_Delete_EntireText(t *testing.T) {
 	pt := NewPieceTable("Hello")
 	pt.Delete(0, 5)
 
@@ -208,9 +234,9 @@ func TestDelete_EntireText(t *testing.T) {
 	}
 }
 
-func TestDelete_PartialPiece(t *testing.T) {
+func TestPieceTable_Delete_PartialPiece(t *testing.T) {
 	pt := NewPieceTable("Hello World")
-	pt.Delete(2, 3) // Remove "llo"
+	pt.Delete(2, 3)
 
 	result := pt.String()
 	expected := "He World"
@@ -219,7 +245,7 @@ func TestDelete_PartialPiece(t *testing.T) {
 	}
 }
 
-func TestDelete_ZeroLength(t *testing.T) {
+func TestPieceTable_Delete_ZeroLength(t *testing.T) {
 	pt := NewPieceTable("Hello")
 	pt.Delete(2, 0)
 
@@ -230,7 +256,7 @@ func TestDelete_ZeroLength(t *testing.T) {
 	}
 }
 
-func TestDelete_AfterInsert(t *testing.T) {
+func TestPieceTable_Delete_AfterInsert(t *testing.T) {
 	pt := NewPieceTable("Hello World")
 	pt.Insert(6, "Beautiful ")
 	pt.Delete(0, 6)
