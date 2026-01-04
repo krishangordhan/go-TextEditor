@@ -8,7 +8,7 @@ From the information we have I am starting with a plan of how to build this.
 Plan:
  - Research Data structures
  - Doing Piece Table
-   - Creating a Piece Table data structure
+   - Creating a Piece Table data structure DONE
    - Creating a Piece Table
    - Converting away from Piece Table
    - Inserting into Piece Table
