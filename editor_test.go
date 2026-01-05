@@ -121,6 +121,20 @@ func TestEditor_DeleteAtCursor_ShouldDeleteText(t *testing.T) {
 	}
 }
 
+func TestEditor_DeleteAtCursor_DeleteAt0_ShouldNotChangeText(t *testing.T) {
+	editor := NewEditor("Hello")
+	editor.DeleteAtCursor(0)
+
+	expected := "Hello"
+	if editor.GetText() != expected {
+		t.Errorf("Expected %q, got %q", expected, editor.GetText())
+	}
+
+	if editor.GetCursorPosition() != 0 {
+		t.Errorf("Expected cursor at 0, got %d", editor.GetCursorPosition())
+	}
+}
+
 func TestEditor_Backspace_ShouldDeleteCharacterBeforeCursor(t *testing.T) {
 	editor := NewEditor("Hello")
 	editor.SetCursorPosition(5)
