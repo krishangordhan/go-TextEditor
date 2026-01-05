@@ -39,6 +39,9 @@ func (d *Display) Render() {
 		}
 
 		if r == '\n' {
+			if i == cursorPos {
+				termbox.SetCell(x, y, ' ', fg, bg)
+			}
 			y++
 			x = 0
 			continue
