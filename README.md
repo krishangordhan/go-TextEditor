@@ -13,12 +13,21 @@ Plan:
    - Converting away from Piece Table `DONE`
    - Inserting into Piece Table `DONE`
    - Deleting Text `DONE`
- - Figure out UX and Cursor
-   - Add cursor structure
-   - Create Editor and Piece Table interface
-   - Add some UI (Just grab a library?)
-   - Implement logic loop
-   - Add tracking of location?
-   - Do we want to consider a scroll?
+ - Figure out UX and Cursor `Done`
+   - Add cursor structure `Done`
+   - Create Editor and Piece Table interface `Done`
+   - Add some UI (Just grab a library?) `Done`
+   - Implement logic loop `Done`
+   - Add tracking of location? (Up and Down) `Done`
+   - Do we want to consider a scroll? Lol nope `Not Done`
+ - I/O capabilities
+   - File manager, with read and write file. Dirty flag?
+   - Integrate file manager with Editor interface
+   - Create file line args for file
+   - Save keybindings
+   - Save As?
+   - Unsave warnings?
+   - Add status bar icons for files unsaved?
+   - Error handling.
  - Undo and redo? (Should be just remove from piece table and store and then readd to piece table?)
  - Yes, add more.
