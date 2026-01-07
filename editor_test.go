@@ -236,3 +236,72 @@ func TestEditor_TypeAndBackspace_ShouldTypeAndDeleteCharacters(t *testing.T) {
 		t.Errorf("Expected cursor at 3, got %d", editor.GetCursorPosition())
 	}
 }
+
+func TestEditor_MoveCursorUp_ShouldUpdateCursorPosition(t *testing.T) {
+	editor := NewEditor("Line 1\nLine 2\nLine 3")
+	editor.SetCursorPosition(10)
+
+	editor.MoveCursorUp()
+
+	expected := 3
+	if editor.GetCursorPosition() != expected {
+		t.Errorf("Expected cursor at %d, got %d", expected, editor.GetCursorPosition())
+	}
+}
+
+func TestEditor_MoveCursorDown_ShouldUpdateCursorPosition(t *testing.T) {
+	editor := NewEditor("Line 1\nLine 2\nLine 3")
+	editor.SetCursorPosition(3)
+
+	editor.MoveCursorDown()
+
+	expected := 10
+	if editor.GetCursorPosition() != expected {
+		t.Errorf("Expected cursor at %d, got %d", expected, editor.GetCursorPosition())
+	}
+}
+
+func TestEditor_MoveCursorUpAtStart_ShouldNotChangeCursorPosition(t *testing.T) {
+	editor := NewEditor("Line 1\nLine 2")
+	editor.MoveCursorUp()
+
+	if editor.GetCursorPosition() != 0 {
+		t.Errorf("Expected cursor at 0, got %d", editor.GetCursorPosition())
+	}
+}
+
+func TestEditor_MoveCursorDownAtEnd_ShouldNotChangeCursorPosition(t *testing.T) {
+	editor := NewEditor("Line 1\nLine 2")
+	editor.SetCursorPosition(13)
+
+	editor.MoveCursorDown()
+
+	if editor.GetCursorPosition() != 13 {
+		t.Errorf("Expected cursor at 13, got %d", editor.GetCursorPosition())
+	}
+}
+
+func TestEditor_MoveCursorUpShortLine_ShouldUpdateCursorPosition(t *testing.T) {
+	editor := NewEditor("Short\nMuch longer line")
+	editor.SetCursorPosition(15)
+
+	editor.MoveCursorUp()
+
+	expected := 5
+	if editor.GetCursorPosition() != expected {
+		t.Errorf("Expected cursor at %d, got %d", expected, editor.GetCursorPosition())
+	}
+}
+
+func TestEditor_MoveCursorDown_ShouldRememberCursorLocation(t *testing.T) {
+	editor := NewEditor("Long line here\nX\nAnother long line")
+	editor.SetCursorPosition(5)
+
+	editor.MoveCursorDown()
+	editor.MoveCursorDown()
+
+	expected := 22
+	if editor.GetCursorPosition() != expected {
+		t.Errorf("Expected cursor at %d, got %d", expected, editor.GetCursorPosition())
+	}
+}

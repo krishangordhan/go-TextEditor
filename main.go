@@ -32,6 +32,10 @@ func main() {
 				editor.MoveCursorLeft()
 			case termbox.KeyArrowRight:
 				editor.MoveCursorRight()
+			case termbox.KeyArrowUp:
+				editor.MoveCursorUp()
+			case termbox.KeyArrowDown:
+				editor.MoveCursorDown()
 			case termbox.KeyBackspace, termbox.KeyBackspace2:
 				editor.Backspace()
 			case termbox.KeyDelete:
