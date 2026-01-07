@@ -167,3 +167,91 @@ func (pt *PieceTable) Delete(offset, length int) {
 
 	pt.pieces = newPieces
 }
+
+func (pt *PieceTable) GetLineColumn(offset int) (line, col int) {
+	text := []rune(pt.String())
+	if offset > len(text) {
+		offset = len(text)
+	}
+
+	line = 0
+	col = 0
+
+	for i := 0; i < offset; i++ {
+		if text[i] == '\n' {
+			line++
+			col = 0
+		} else {
+			col++
+		}
+	}
+
+	return line, col
+}
+
+func (pt *PieceTable) GetOffsetFromLineColumn(targetLine, targetCol int) int {
+	text := []rune(pt.String())
+	line := 0
+	col := 0
+
+	for i := 0; i <= len(text); i++ {
+		if line == targetLine && col == targetCol {
+			return i
+		}
+
+		if i == len(text) {
+			break
+		}
+
+		if text[i] == '\n' {
+			if line == targetLine {
+				return i
+			}
+			line++
+			col = 0
+		} else {
+			col++
+		}
+	}
+
+	return len(text)
+}
+
+func (pt *PieceTable) GetLineLength(lineNum int) int {
+	text := []rune(pt.String())
+	line := 0
+	lineStart := 0
+
+	for i := 0; i <= len(text); i++ {
+		if line == lineNum {
+			if i == len(text) || text[i] == '\n' {
+				return i - lineStart
+			}
+		}
+
+		if i < len(text) && text[i] == '\n' {
+			if line == lineNum {
+				return i - lineStart
+			}
+			line++
+			lineStart = i + 1
+		}
+	}
+
+	return 0
+}
+
+func (pt *PieceTable) GetLineCount() int {
+	text := []rune(pt.String())
+	if len(text) == 0 {
+		return 1
+	}
+
+	lines := 1
+	for _, r := range text {
+		if r == '\n' {
+			lines++
+		}
+	}
+	return lines
+}

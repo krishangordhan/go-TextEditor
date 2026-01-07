@@ -1,14 +1,16 @@
 package main
 
 type Editor struct {
-	buffer *PieceTable
-	cursor *Cursor
+	buffer     *PieceTable
+	cursor     *Cursor
+	desiredCol int
 }
 
 func NewEditor(text string) *Editor {
 	return &Editor{
-		buffer: NewPieceTable(text),
-		cursor: NewCursor(),
+		buffer:     NewPieceTable(text),
+		cursor:     NewCursor(),
+		desiredCol: 0,
 	}
 }
 
@@ -33,10 +35,67 @@ func (e *Editor) SetCursorPosition(pos int) {
 
 func (e *Editor) MoveCursorLeft() {
 	e.cursor.MoveLeft()
+	_, col := e.buffer.GetLineColumn(e.cursor.GetPosition())
+	e.desiredCol = col
 }
 
 func (e *Editor) MoveCursorRight() {
 	e.cursor.MoveRight(e.buffer.Length())
+	_, col := e.buffer.GetLineColumn(e.cursor.GetPosition())
+	e.desiredCol = col
+}
+
+func (e *Editor) MoveCursorUp() {
+	pos := e.cursor.GetPosition()
+	line, col := e.buffer.GetLineColumn(pos)
+
+	if e.desiredCol == 0 {
+		e.desiredCol = col
+	}
+
+	if line > 0 {
+		targetLine := line - 1
+		targetCol := e.desiredCol
+
+		lineLength := e.buffer.GetLineLength(targetLine)
+		if targetCol > lineLength {
+			targetCol = lineLength
+		}
+
+		newPos := e.buffer.GetOffsetFromLineColumn(targetLine, targetCol)
+		e.cursor.SetPosition(newPos)
+	} else {
+		e.cursor.SetPosition(0)
+		e.desiredCol = 0
+	}
+}
+
+func (e *Editor) MoveCursorDown() {
+	pos := e.cursor.GetPosition()
+	line, col := e.buffer.GetLineColumn(pos)
+
+	if e.desiredCol == 0 {
+		e.desiredCol = col
+	}
+
+	lineCount := e.buffer.GetLineCount()
+
+	if line < lineCount-1 {
+		targetLine := line + 1
+		targetCol := e.desiredCol
+
+		lineLength := e.buffer.GetLineLength(targetLine)
+		if targetCol > lineLength {
+			targetCol = lineLength
+		}
+
+		newPos := e.buffer.GetOffsetFromLineColumn(targetLine, targetCol)
+		e.cursor.SetPosition(newPos)
+	} else {
+		e.cursor.SetPosition(e.buffer.Length())
+		_, col := e.buffer.GetLineColumn(e.buffer.Length())
+		e.desiredCol = col
+	}
 }
 
 func (e *Editor) InsertAtCursor(text string) {
