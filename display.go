@@ -64,7 +64,7 @@ func (d *Display) renderStatusBar() {
 	_, height := termbox.Size()
 	statusY := height - 1
 
-	status := " Ctrl+Q: Quit | Arrows: Move | Type to insert | Backspace: Delete"
+	status := " Ctrl+S: Save | Ctrl+Q: Quit | Arrows: Move | Type to insert"
 	x := 0
 	for _, r := range status {
 		termbox.SetCell(x, statusY, r, termbox.ColorBlack, termbox.ColorWhite)

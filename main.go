@@ -39,6 +39,13 @@ func main() {
 				break
 			}
 
+			if ev.Key == termbox.KeyCtrlS {
+				err := editor.Save()
+				if err != nil {
+					// TODO: Handle save errors.
+				}
+			}
+
 			switch ev.Key {
 			case termbox.KeyArrowLeft:
 				editor.MoveCursorLeft()
