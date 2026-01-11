@@ -29,12 +29,44 @@ func main() {
 	}
 	defer display.Close()
 
+	inputMode := false
+	inputPrompt := ""
+	inputBuffer := ""
+
 	display.Render()
 
 	for {
 		ev := termbox.PollEvent()
 
 		if ev.Type == termbox.EventKey {
+			if inputMode {
+				if ev.Key == termbox.KeyEsc {
+					inputMode = false
+					inputBuffer = ""
+					display.Render()
+				} else if ev.Key == termbox.KeyEnter {
+					if inputBuffer != "" {
+						err := editor.SaveAs(inputBuffer)
+						if err != nil {
+							// TODO: Handle save errors.
+						}
+					}
+					inputMode = false
+					inputBuffer = ""
+					display.Render()
+				} else if ev.Key == termbox.KeyBackspace || ev.Key == termbox.KeyBackspace2 {
+					if len(inputBuffer) > 0 {
+						runes := []rune(inputBuffer)
+						inputBuffer = string(runes[:len(runes)-1])
+					}
+					display.RenderWithSaveAsPrompt(inputPrompt, inputBuffer)
+				} else if ev.Ch != 0 {
+					inputBuffer += string(ev.Ch)
+					display.RenderWithSaveAsPrompt(inputPrompt, inputBuffer)
+				}
+				continue
+			}
+
 			if ev.Key == termbox.KeyCtrlQ {
 				break
 			}
@@ -44,6 +76,14 @@ func main() {
 				if err != nil {
 					// TODO: Handle save errors.
 				}
+			}
+
+			if ev.Key == termbox.KeyCtrlW {
+				inputMode = true
+				inputPrompt = "Save as: "
+				inputBuffer = ""
+				display.RenderWithSaveAsPrompt(inputPrompt, inputBuffer)
+				continue
 			}
 
 			switch ev.Key {
