@@ -32,6 +32,7 @@ func main() {
 	inputMode := false
 	inputPrompt := ""
 	inputBuffer := ""
+	confirmQuit := false
 
 	display.Render()
 
@@ -39,6 +40,16 @@ func main() {
 		ev := termbox.PollEvent()
 
 		if ev.Type == termbox.EventKey {
+			if confirmQuit {
+				if ev.Ch == 'y' || ev.Ch == 'Y' {
+					break
+				} else if ev.Ch == 'n' || ev.Ch == 'N' || ev.Key == termbox.KeyEsc {
+					confirmQuit = false
+					display.Render()
+				}
+				continue
+			}
+
 			if inputMode {
 				if ev.Key == termbox.KeyEsc {
 					inputMode = false
@@ -59,15 +70,20 @@ func main() {
 						runes := []rune(inputBuffer)
 						inputBuffer = string(runes[:len(runes)-1])
 					}
-					display.RenderWithSaveAsPrompt(inputPrompt, inputBuffer)
+					display.RenderWithPrompt(inputPrompt, inputBuffer)
 				} else if ev.Ch != 0 {
 					inputBuffer += string(ev.Ch)
-					display.RenderWithSaveAsPrompt(inputPrompt, inputBuffer)
+					display.RenderWithPrompt(inputPrompt, inputBuffer)
 				}
 				continue
 			}
 
 			if ev.Key == termbox.KeyCtrlQ {
+				if editor.GetFileManager().IsDirty() {
+					confirmQuit = true
+					display.RenderWithPrompt("Unsaved changes! Are you sure you want to quit? (y/n): ", "")
+					continue
+				}
 				break
 			}
 
@@ -82,7 +98,7 @@ func main() {
 				inputMode = true
 				inputPrompt = "Save as: "
 				inputBuffer = ""
-				display.RenderWithSaveAsPrompt(inputPrompt, inputBuffer)
+				display.RenderWithPrompt(inputPrompt, inputBuffer)
 				continue
 			}
 
