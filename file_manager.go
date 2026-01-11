@@ -11,16 +11,12 @@ type FileManager struct {
 }
 
 func NewFileManager() *FileManager {
-	return &FileManager{
-		filePath: "",
-		isDirty:  false,
-	}
+	return &FileManager{}
 }
 
 func NewFileManagerWithPath(path string) *FileManager {
 	return &FileManager{
 		filePath: path,
-		isDirty:  false,
 	}
 }
 
