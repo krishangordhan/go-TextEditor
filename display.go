@@ -60,7 +60,7 @@ func (d *Display) Render() {
 	termbox.Flush()
 }
 
-func (d *Display) RenderWithSaveAsPrompt(prompt, input string) {
+func (d *Display) RenderWithPrompt(prompt, input string) {
 	termbox.Clear(termbox.ColorDefault, termbox.ColorDefault)
 
 	text := d.editor.GetText()

@@ -30,7 +30,7 @@ Plan:
    - Save keybindings `Done` 
       - Add save error bubbling up.
    - Save As? `Done`
-   - Unsave warnings?
+   - Unsave warnings? `Done`
    - Add status bar icons for files unsaved?
    - Error handling.
  - Undo and redo? (Should be just remove from piece table and store and then readd to piece table?)
