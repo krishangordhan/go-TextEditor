@@ -305,3 +305,150 @@ func TestEditor_MoveCursorDown_ShouldRememberCursorLocation(t *testing.T) {
 		t.Errorf("Expected cursor at %d, got %d", expected, editor.GetCursorPosition())
 	}
 }
+
+func TestEditor_NewEditorFromFile_LoadsFileContent(t *testing.T) {
+	tmpDir := t.TempDir()
+	tmpFile := tmpDir + "/test.txt"
+	content := "Line 1\nLine 2\nLine 3"
+
+	err := writeTestFile(tmpFile, content)
+	if err != nil {
+		t.Fatalf("Failed to create test file: %v", err)
+	}
+
+	editor, err := NewEditorFromFile(tmpFile)
+	if err != nil {
+		t.Fatalf("NewEditorFromFile failed: %v", err)
+	}
+
+	if editor.GetText() != content {
+		t.Errorf("Expected text %q, got %q", content, editor.GetText())
+	}
+
+	if editor.GetFileManager().GetFilePath() != tmpFile {
+		t.Errorf("Expected file path %q, got %q", tmpFile, editor.GetFileManager().GetFilePath())
+	}
+
+	if editor.GetFileManager().IsDirty() {
+		t.Error("Expected file to not be dirty after loading")
+	}
+}
+
+func TestEditor_NewEditorFromFile_NonExistentFile(t *testing.T) {
+	_, err := NewEditorFromFile("/nonexistent/file.txt")
+	if err == nil {
+		t.Error("Expected error when loading non-existent file")
+	}
+}
+
+func TestEditor_Save_WritesContentToFile(t *testing.T) {
+	tmpDir := t.TempDir()
+	tmpFile := tmpDir + "/test.txt"
+	initialContent := "Initial content"
+
+	err := writeTestFile(tmpFile, initialContent)
+	if err != nil {
+		t.Fatalf("Failed to create test file: %v", err)
+	}
+
+	editor, err := NewEditorFromFile(tmpFile)
+	if err != nil {
+		t.Fatalf("NewEditorFromFile failed: %v", err)
+	}
+
+	editor.SetCursorPosition(editor.buffer.Length())
+	editor.InsertAtCursor("\nNew line")
+
+	if !editor.GetFileManager().IsDirty() {
+		t.Error("Expected file to be dirty after modification")
+	}
+
+	err = editor.Save()
+	if err != nil {
+		t.Fatalf("Save failed: %v", err)
+	}
+
+	if editor.GetFileManager().IsDirty() {
+		t.Error("Expected file to not be dirty after save")
+	}
+
+	savedContent := readTestFile(t, tmpFile)
+	expectedContent := initialContent + "\nNew line"
+	if savedContent != expectedContent {
+		t.Errorf("Expected saved content %q, got %q", expectedContent, savedContent)
+	}
+}
+
+func TestEditor_SaveAs_WritesToNewFile(t *testing.T) {
+	editor := NewEditor("Original content")
+	tmpDir := t.TempDir()
+	newFile := tmpDir + "/new_file.txt"
+
+	err := editor.SaveAs(newFile)
+	if err != nil {
+		t.Fatalf("SaveAs failed: %v", err)
+	}
+
+	if editor.GetFileManager().GetFilePath() != newFile {
+		t.Errorf("Expected file path %q, got %q", newFile, editor.GetFileManager().GetFilePath())
+	}
+
+	if editor.GetFileManager().IsDirty() {
+		t.Error("Expected file to not be dirty after SaveAs")
+	}
+
+	savedContent := readTestFile(t, newFile)
+	if savedContent != "Original content" {
+		t.Errorf("Expected saved content %q, got %q", "Original content", savedContent)
+	}
+}
+
+func TestEditor_InsertMarksFileDirty(t *testing.T) {
+	editor := NewEditor("Test")
+	editor.InsertAtCursor("x")
+
+	if !editor.GetFileManager().IsDirty() {
+		t.Error("Expected file to be dirty after insert")
+	}
+}
+
+func TestEditor_BackspaceMarksFileDirty(t *testing.T) {
+	editor := NewEditor("Test")
+	editor.SetCursorPosition(1)
+	editor.Backspace()
+
+	if !editor.GetFileManager().IsDirty() {
+		t.Error("Expected file to be dirty after backspace")
+	}
+}
+
+func TestEditor_DeleteMarksFileDirty(t *testing.T) {
+	editor := NewEditor("Test")
+	editor.Delete()
+
+	if !editor.GetFileManager().IsDirty() {
+		t.Error("Expected file to be dirty after delete")
+	}
+}
+
+func writeTestFile(path, content string) error {
+	return writeFile(path, content)
+}
+
+func readTestFile(t *testing.T, path string) string {
+	content, err := readFile(path)
+	if err != nil {
+		t.Fatalf("Failed to read test file: %v", err)
+	}
+	return content
+}
+
+func writeFile(path, content string) error {
+	fm := NewFileManagerWithPath(path)
+	return fm.WriteFile(content)
+}
+
+func readFile(path string) (string, error) {
+	fm := NewFileManagerWithPath(path)
+	return fm.ReadFile()
+}

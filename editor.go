@@ -1,17 +1,34 @@
 package main
 
 type Editor struct {
-	buffer     *PieceTable
-	cursor     *Cursor
-	desiredCol int
+	buffer      *PieceTable
+	cursor      *Cursor
+	desiredCol  int
+	fileManager *FileManager
 }
 
 func NewEditor(text string) *Editor {
 	return &Editor{
-		buffer:     NewPieceTable(text),
-		cursor:     NewCursor(),
-		desiredCol: 0,
+		buffer:      NewPieceTable(text),
+		cursor:      NewCursor(),
+		desiredCol:  0,
+		fileManager: NewFileManager(),
 	}
+}
+
+func NewEditorFromFile(filePath string) (*Editor, error) {
+	fm := NewFileManagerWithPath(filePath)
+	content, err := fm.ReadFile()
+	if err != nil {
+		return nil, err
+	}
+
+	return &Editor{
+		buffer:      NewPieceTable(content),
+		cursor:      NewCursor(),
+		desiredCol:  0,
+		fileManager: fm,
+	}, nil
 }
 
 func (e *Editor) GetText() string {
@@ -102,6 +119,7 @@ func (e *Editor) InsertAtCursor(text string) {
 	pos := e.cursor.GetPosition()
 	e.buffer.Insert(pos, text)
 	e.cursor.SetPosition(pos + len([]rune(text)))
+	e.fileManager.MarkDirty()
 }
 
 func (e *Editor) DeleteAtCursor(length int) {
@@ -110,6 +128,7 @@ func (e *Editor) DeleteAtCursor(length int) {
 	}
 	pos := e.cursor.GetPosition()
 	e.buffer.Delete(pos, length)
+	e.fileManager.MarkDirty()
 }
 
 func (e *Editor) Backspace() {
@@ -117,6 +136,7 @@ func (e *Editor) Backspace() {
 	if pos > 0 {
 		e.buffer.Delete(pos-1, 1)
 		e.cursor.SetPosition(pos - 1)
+		e.fileManager.MarkDirty()
 	}
 }
 
@@ -124,5 +144,19 @@ func (e *Editor) Delete() {
 	pos := e.cursor.GetPosition()
 	if pos < e.buffer.Length() {
 		e.buffer.Delete(pos, 1)
+		e.fileManager.MarkDirty()
 	}
+}
+
+func (e *Editor) GetFileManager() *FileManager {
+	return e.fileManager
+}
+
+func (e *Editor) Save() error {
+	return e.fileManager.WriteFile(e.buffer.String())
+}
+
+func (e *Editor) SaveAs(filePath string) error {
+	e.fileManager.SetFilePath(filePath)
+	return e.fileManager.WriteFile(e.buffer.String())
 }
