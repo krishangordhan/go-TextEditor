@@ -2,16 +2,28 @@ package main
 
 import (
 	"log"
+	"os"
 
 	"github.com/nsf/termbox-go"
 )
 
 func main() {
-	editor := NewEditor("Hello World!\nThis is a simple text editor.\nTry editing this text!")
+	var editor *Editor
+	var err error
+
+	if len(os.Args) > 1 {
+		filePath := os.Args[1]
+		editor, err = NewEditorFromFile(filePath)
+		if err != nil {
+			log.Fatalf("Failed to open file %s: %v", filePath, err)
+		}
+	} else {
+		editor = NewEditor("Hello World!\nThis is a simple text editor.\nTry editing this text!")
+	}
 
 	display := NewDisplay(editor)
 
-	err := display.Init()
+	err = display.Init()
 	if err != nil {
 		log.Fatal(err)
 	}

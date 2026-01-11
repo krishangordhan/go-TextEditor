@@ -5,6 +5,9 @@ On my journey to follow these projects and learn how to build these projects. ht
 I am starting out with the Text Editor.
 From the information we have I am starting with a plan of how to build this.
 
+While in the directory can build it with `go build -o texteditor`
+and run it with `./texteditor testfile.txt`
+
 Plan:
  - Research Data structures
  - Doing Piece Table `DONE`
