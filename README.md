@@ -24,11 +24,12 @@ Plan:
    - Add tracking of location? (Up and Down) `Done`
    - Do we want to consider a scroll? Lol nope `Not Done`
  - I/O capabilities
-   - File manager, with read and write file. Dirty flag?
-   - Integrate file manager with Editor interface
-   - Create file line args for file
-   - Save keybindings
-   - Save As?
+   - File manager, with read and write file. Dirty flag? `Done`
+   - Integrate file manager with Editor interface `Done`
+   - Create file line args for file `Done` 
+   - Save keybindings `Done` 
+      - Add save error bubbling up.
+   - Save As? `Done`
    - Unsave warnings?
    - Add status bar icons for files unsaved?
    - Error handling.
