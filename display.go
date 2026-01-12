@@ -29,71 +29,24 @@ func (d *Display) Close() {
 	termbox.Close()
 }
 
-// TODO: Clean up Render, a lot of duplication and I'm not sure its needed.
 func (d *Display) Render() {
-	d.adjustScrollForCursor()
-	termbox.Clear(termbox.ColorDefault, termbox.ColorDefault)
-
-	_, height := termbox.Size()
-	visibleLines := height - 1 // Magic number status bar shit
-
-	text := d.editor.GetText()
-	cursorPos := d.editor.GetCursorPosition()
-
-	x, y := 0, 0
-	lineNum := 0
-
-	for i, r := range []rune(text) {
-		if lineNum < d.scrollY {
-			if r == '\n' {
-				lineNum++
-			}
-			continue
-		}
-
-		if y >= visibleLines {
-			break
-		}
-
-		fg := termbox.ColorDefault
-		bg := termbox.ColorDefault
-
-		if i == cursorPos {
-			bg = termbox.ColorWhite
-			fg = termbox.ColorBlack
-		}
-
-		if r == '\n' {
-			if i == cursorPos {
-				termbox.SetCell(x, y, ' ', fg, bg)
-			}
-			y++
-			lineNum++
-			x = 0
-			continue
-		}
-
-		termbox.SetCell(x, y, r, fg, bg)
-		x++
-	}
-
-	if cursorPos == len([]rune(text)) {
-		if y < visibleLines {
-			termbox.SetCell(x, y, ' ', termbox.ColorBlack, termbox.ColorWhite)
-		}
-	}
-
+	d.renderEditor()
 	d.renderStatusBar()
-
 	termbox.Flush()
 }
 
 func (d *Display) RenderWithPrompt(prompt, input string) {
+	d.renderEditor()
+	d.renderPrompt(prompt, input)
+	termbox.Flush()
+}
+
+func (d *Display) renderEditor() {
 	d.adjustScrollForCursor()
 	termbox.Clear(termbox.ColorDefault, termbox.ColorDefault)
 
 	_, height := termbox.Size()
-	visibleLines := height - 1 // Magic number status bar shit
+	visibleLines := height - 1 // Hard code 1 line for status bar. Yes its a magic number.
 
 	text := d.editor.GetText()
 	cursorPos := d.editor.GetCursorPosition()
@@ -140,10 +93,6 @@ func (d *Display) RenderWithPrompt(prompt, input string) {
 			termbox.SetCell(x, y, ' ', termbox.ColorBlack, termbox.ColorWhite)
 		}
 	}
-
-	d.renderPrompt(prompt, input)
-
-	termbox.Flush()
 }
 
 func (d *Display) renderPrompt(prompt, input string) {
