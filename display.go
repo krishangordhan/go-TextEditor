@@ -29,14 +29,32 @@ func (d *Display) Close() {
 	termbox.Close()
 }
 
+// TODO: Clean up Render, a lot of duplication and I'm not sure its needed.
 func (d *Display) Render() {
+	d.adjustScrollForCursor()
 	termbox.Clear(termbox.ColorDefault, termbox.ColorDefault)
+
+	_, height := termbox.Size()
+	visibleLines := height - 1 // Magic number status bar shit
 
 	text := d.editor.GetText()
 	cursorPos := d.editor.GetCursorPosition()
 
 	x, y := 0, 0
+	lineNum := 0
+
 	for i, r := range []rune(text) {
+		if lineNum < d.scrollY {
+			if r == '\n' {
+				lineNum++
+			}
+			continue
+		}
+
+		if y >= visibleLines {
+			break
+		}
+
 		fg := termbox.ColorDefault
 		bg := termbox.ColorDefault
 
@@ -50,6 +68,7 @@ func (d *Display) Render() {
 				termbox.SetCell(x, y, ' ', fg, bg)
 			}
 			y++
+			lineNum++
 			x = 0
 			continue
 		}
@@ -59,7 +78,9 @@ func (d *Display) Render() {
 	}
 
 	if cursorPos == len([]rune(text)) {
-		termbox.SetCell(x, y, ' ', termbox.ColorBlack, termbox.ColorWhite)
+		if y < visibleLines {
+			termbox.SetCell(x, y, ' ', termbox.ColorBlack, termbox.ColorWhite)
+		}
 	}
 
 	d.renderStatusBar()
@@ -68,13 +89,30 @@ func (d *Display) Render() {
 }
 
 func (d *Display) RenderWithPrompt(prompt, input string) {
+	d.adjustScrollForCursor()
 	termbox.Clear(termbox.ColorDefault, termbox.ColorDefault)
+
+	_, height := termbox.Size()
+	visibleLines := height - 1 // Magic number status bar shit
 
 	text := d.editor.GetText()
 	cursorPos := d.editor.GetCursorPosition()
 
 	x, y := 0, 0
+	lineNum := 0
+
 	for i, r := range []rune(text) {
+		if lineNum < d.scrollY {
+			if r == '\n' {
+				lineNum++
+			}
+			continue
+		}
+
+		if y >= visibleLines {
+			break
+		}
+
 		fg := termbox.ColorDefault
 		bg := termbox.ColorDefault
 
@@ -88,6 +126,7 @@ func (d *Display) RenderWithPrompt(prompt, input string) {
 				termbox.SetCell(x, y, ' ', fg, bg)
 			}
 			y++
+			lineNum++
 			x = 0
 			continue
 		}
@@ -97,7 +136,9 @@ func (d *Display) RenderWithPrompt(prompt, input string) {
 	}
 
 	if cursorPos == len([]rune(text)) {
-		termbox.SetCell(x, y, ' ', termbox.ColorBlack, termbox.ColorWhite)
+		if y < visibleLines {
+			termbox.SetCell(x, y, ' ', termbox.ColorBlack, termbox.ColorWhite)
+		}
 	}
 
 	d.renderPrompt(prompt, input)
