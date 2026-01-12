@@ -35,6 +35,10 @@ func (e *Editor) GetText() string {
 	return e.buffer.String()
 }
 
+func (e *Editor) GetBuffer() *PieceTable {
+	return e.buffer
+}
+
 func (e *Editor) GetCursorPosition() int {
 	return e.cursor.GetPosition()
 }

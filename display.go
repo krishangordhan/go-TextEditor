@@ -1,6 +1,9 @@
 package main
 
 import (
+	"fmt"
+	"path/filepath"
+
 	"github.com/nsf/termbox-go"
 )
 
@@ -112,13 +115,48 @@ func (d *Display) renderPrompt(prompt, input string) {
 }
 
 func (d *Display) renderStatusBar() {
-	_, height := termbox.Size()
+	width, height := termbox.Size()
 	statusY := height - 1
 
-	status := " Ctrl+S: Save | Ctrl+W: Save As | Ctrl+Q: Quit | Arrows: Move"
+	fm := d.editor.GetFileManager()
+	filename := "[No Name]"
+	if fm.HasFile() {
+		filename = filepath.Base(fm.GetFilePath())
+	}
+
+	modifiedIndicator := ""
+	if fm.IsDirty() {
+		modifiedIndicator = " [+]"
+	}
+
+	cursorPos := d.editor.GetCursorPosition()
+	line, col := d.editor.GetBuffer().GetLineColumn(cursorPos)
+
+	leftStatus := fmt.Sprintf(" %s%s | Ln %d, Col %d", filename, modifiedIndicator, line+1, col)
+
+	rightStatus := "Ctrl+S: Save | Ctrl+W: Save As | Ctrl+Q: Quit "
+
+	for i := 0; i < width; i++ {
+		termbox.SetCell(i, statusY, ' ', termbox.ColorBlack, termbox.ColorWhite)
+	}
+
 	x := 0
-	for _, r := range status {
+	for _, r := range leftStatus {
+		if x >= width {
+			break
+		}
 		termbox.SetCell(x, statusY, r, termbox.ColorBlack, termbox.ColorWhite)
 		x++
+	}
+
+	rightX := width - len(rightStatus)
+	if rightX < x {
+		rightX = x
+	}
+	for i, r := range rightStatus {
+		if rightX+i >= width {
+			break
+		}
+		termbox.SetCell(rightX+i, statusY, r, termbox.ColorBlack, termbox.ColorWhite)
 	}
 }
