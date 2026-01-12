@@ -31,7 +31,7 @@ Plan:
       - Add save error bubbling up.
    - Save As? `Done`
    - Unsave warnings? `Done`
-   - Add status bar icons for files unsaved?
-   - Error handling.
+   - Add status bar icons for files unsaved? `Done`
+   - Error handling. `Not Done`
  - Undo and redo? (Should be just remove from piece table and store and then readd to piece table?)
  - Yes, add more.
