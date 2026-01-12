@@ -165,6 +165,7 @@ func (d *Display) renderStatusBar() {
 	}
 }
 
+// TODO: Find a better way to do cursor line/col tracking, a lot of duplication.
 func (d *Display) getCursorLineCol() (int, int) {
 	cursorPos := d.editor.GetCursorPosition()
 	return d.editor.GetBuffer().GetLineColumn(cursorPos)
