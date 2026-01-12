@@ -8,12 +8,16 @@ import (
 )
 
 type Display struct {
-	editor *Editor
+	editor  *Editor
+	scrollX int
+	scrollY int
 }
 
 func NewDisplay(editor *Editor) *Display {
 	return &Display{
-		editor: editor,
+		editor:  editor,
+		scrollX: 0,
+		scrollY: 0,
 	}
 }
 
@@ -158,5 +162,28 @@ func (d *Display) renderStatusBar() {
 			break
 		}
 		termbox.SetCell(rightX+i, statusY, r, termbox.ColorBlack, termbox.ColorWhite)
+	}
+}
+
+// TODO: Find a better way to do cursor line/col tracking, a lot of duplication.
+func (d *Display) getCursorLineCol() (int, int) {
+	cursorPos := d.editor.GetCursorPosition()
+	return d.editor.GetBuffer().GetLineColumn(cursorPos)
+}
+
+func (d *Display) adjustScrollForCursor() {
+	_, height := termbox.Size()
+	visibleLines := height - 1 // Hard code 1 line for status bar. Yes its a magic number. Fuck off, i'll fix it later.
+
+	cursorLine, _ := d.getCursorLineCol()
+
+	margin := 3
+
+	if cursorLine >= d.scrollY+visibleLines-margin {
+		d.scrollY = cursorLine - visibleLines + margin + 1
+	}
+
+	if cursorLine < d.scrollY+margin {
+		d.scrollY = max(cursorLine-margin, 0)
 	}
 }
