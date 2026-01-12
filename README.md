@@ -23,7 +23,7 @@ Plan:
    - Implement logic loop `Done`
    - Add tracking of location? (Up and Down) `Done`
    - Do we want to consider a scroll? Lol nope `Not Done`
- - I/O capabilities
+ - I/O capabilities `Done`
    - File manager, with read and write file. Dirty flag? `Done`
    - Integrate file manager with Editor interface `Done`
    - Create file line args for file `Done` 
@@ -33,5 +33,11 @@ Plan:
    - Unsave warnings? `Done`
    - Add status bar icons for files unsaved? `Done`
    - Error handling. `Not Done`
+ - Scrolling the page
+   - Implement some way to track scroll state.
+   - Implement vertical scrolling logic, 3-line margin
+   - Render to display only relevant text? (Hmm gonna be funky this one?)
+   - Horizontal scrolling?
+   - Think of what else to add?
  - Undo and redo? (Should be just remove from piece table and store and then readd to piece table?)
  - Yes, add more.
