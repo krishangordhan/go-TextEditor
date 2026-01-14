@@ -33,11 +33,16 @@ Plan:
    - Unsave warnings? `Done`
    - Add status bar icons for files unsaved? `Done`
    - Error handling. `Not Done`
- - Scrolling the page
-   - Implement some way to track scroll state.
-   - Implement vertical scrolling logic, 3-line margin
-   - Render to display only relevant text? (Hmm gonna be funky this one?)
-   - Horizontal scrolling?
-   - Think of what else to add?
- - Undo and redo? (Should be just remove from piece table and store and then readd to piece table?)
+ - Scrolling the page `Done`
+   - Implement some way to track scroll state. `Done`
+   - Implement vertical scrolling logic, 3-line margin `Done`
+   - Render to display only relevant text? (Hmm gonna be funky this one?) `Done`
+   - Horizontal scrolling? `Done`
+ - Undo and redo?
+   - Create struct for edit actions
+   - Add interface to editor for undo redo
+   - Implement Undo, add tests
+   - Implement Redo, add tests
+   - Add keyboard shortcuts
+   - Edge cases, empty undo stack, redo after new edit
  - Yes, add more.
