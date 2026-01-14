@@ -66,6 +66,50 @@ func (pt *PieceTable) Length() int {
 	return totalLength
 }
 
+func (pt *PieceTable) Substring(start, end int) string {
+	if start < 0 || end > pt.Length() || start > end {
+		return ""
+	}
+
+	result := make([]rune, 0, end-start)
+	currentPos := 0
+
+	for _, piece := range pt.pieces {
+		pieceEnd := currentPos + piece.length
+
+		if currentPos >= end {
+			break
+		}
+
+		if pieceEnd <= start {
+			currentPos = pieceEnd
+			continue
+		}
+
+		var buffer []rune
+		if piece.bufferType == Original {
+			buffer = pt.original
+		} else {
+			buffer = pt.add
+		}
+
+		pieceStart := 0
+		if start > currentPos {
+			pieceStart = start - currentPos
+		}
+
+		pieceEndInBuffer := piece.length
+		if end < pieceEnd {
+			pieceEndInBuffer = piece.length - (pieceEnd - end)
+		}
+
+		result = append(result, buffer[piece.start+pieceStart:piece.start+pieceEndInBuffer]...)
+		currentPos = pieceEnd
+	}
+
+	return string(result)
+}
+
 func (pt *PieceTable) Insert(offset int, text string) {
 	if len(text) == 0 {
 		return

@@ -5,6 +5,8 @@ type Editor struct {
 	cursor      *Cursor
 	desiredCol  int
 	fileManager *FileManager
+	undoStack   []Command
+	redoStack   []Command
 }
 
 func NewEditor(text string) *Editor {
@@ -13,6 +15,8 @@ func NewEditor(text string) *Editor {
 		cursor:      NewCursor(),
 		desiredCol:  0,
 		fileManager: NewFileManager(),
+		undoStack:   make([]Command, 0),
+		redoStack:   make([]Command, 0),
 	}
 }
 
@@ -28,6 +32,8 @@ func NewEditorFromFile(filePath string) (*Editor, error) {
 		cursor:      NewCursor(),
 		desiredCol:  0,
 		fileManager: fm,
+		undoStack:   make([]Command, 0),
+		redoStack:   make([]Command, 0),
 	}, nil
 }
 
