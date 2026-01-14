@@ -267,3 +267,66 @@ func TestPieceTable_Delete_AfterInsert(t *testing.T) {
 		t.Errorf("Expected %q, got %q", expected, result)
 	}
 }
+
+func TestPieceTable_Substring_SuccessShorterMessage(t *testing.T) {
+	pt := NewPieceTable("Hello World")
+
+	result := pt.Substring(0, 5)
+	if result != "Hello" {
+		t.Errorf("Expected 'Hello', got '%s'", result)
+	}
+
+	result = pt.Substring(6, 11)
+	if result != "World" {
+		t.Errorf("Expected 'World', got '%s'", result)
+	}
+
+	result = pt.Substring(0, 11)
+	if result != "Hello World" {
+		t.Errorf("Expected 'Hello World', got '%s'", result)
+	}
+}
+
+func TestPieceTable_Substring_WithInsert(t *testing.T) {
+	pt := NewPieceTable("Hello World")
+	pt.Insert(5, " Beautiful")
+
+	result := pt.Substring(5, 15)
+	if result != " Beautiful" {
+		t.Errorf("Expected ' Beautiful', got '%s'", result)
+	}
+
+	result = pt.Substring(0, 21)
+	if result != "Hello Beautiful World" {
+		t.Errorf("Expected 'Hello Beautiful World', got '%s'", result)
+	}
+}
+
+func TestPieceTable_Substring_WithDelete(t *testing.T) {
+	pt := NewPieceTable("Hello Beautiful World")
+	pt.Delete(6, 10)
+
+	result := pt.Substring(0, 11)
+	if result != "Hello World" {
+		t.Errorf("Expected 'Hello World', got '%s'", result)
+	}
+}
+
+func TestPieceTable_Substring_InvalidRange(t *testing.T) {
+	pt := NewPieceTable("Hello")
+
+	result := pt.Substring(-1, 5)
+	if result != "" {
+		t.Errorf("Expected empty string for negative start, got '%s'", result)
+	}
+
+	result = pt.Substring(0, 100)
+	if result != "" {
+		t.Errorf("Expected empty string for end beyond length, got '%s'", result)
+	}
+
+	result = pt.Substring(5, 2)
+	if result != "" {
+		t.Errorf("Expected empty string for start > end, got '%s'", result)
+	}
+}
