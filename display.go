@@ -45,19 +45,24 @@ func (d *Display) renderEditor() {
 	d.adjustScrollForCursor()
 	termbox.Clear(termbox.ColorDefault, termbox.ColorDefault)
 
-	_, height := termbox.Size()
+	width, height := termbox.Size()
 	visibleLines := height - 1 // Hard code 1 line for status bar. Yes its a magic number.
+	visibleCols := width
 
 	text := d.editor.GetText()
 	cursorPos := d.editor.GetCursorPosition()
 
 	x, y := 0, 0
 	lineNum := 0
+	colNum := 0
 
 	for i, r := range []rune(text) {
 		if lineNum < d.scrollY {
 			if r == '\n' {
 				lineNum++
+				colNum = 0
+			} else {
+				colNum++
 			}
 			continue
 		}
@@ -75,22 +80,27 @@ func (d *Display) renderEditor() {
 		}
 
 		if r == '\n' {
-			if i == cursorPos {
-				termbox.SetCell(x, y, ' ', fg, bg)
+			if i == cursorPos && colNum >= d.scrollX && colNum < d.scrollX+visibleCols {
+				termbox.SetCell(colNum-d.scrollX, y, ' ', fg, bg)
 			}
 			y++
 			lineNum++
+			colNum = 0
 			x = 0
 			continue
 		}
 
-		termbox.SetCell(x, y, r, fg, bg)
-		x++
+		if colNum >= d.scrollX && colNum < d.scrollX+visibleCols {
+			termbox.SetCell(x, y, r, fg, bg)
+			x++
+		}
+
+		colNum++
 	}
 
 	if cursorPos == len([]rune(text)) {
-		if y < visibleLines {
-			termbox.SetCell(x, y, ' ', termbox.ColorBlack, termbox.ColorWhite)
+		if y < visibleLines && colNum >= d.scrollX && colNum < d.scrollX+visibleCols {
+			termbox.SetCell(colNum-d.scrollX, y, ' ', termbox.ColorBlack, termbox.ColorWhite)
 		}
 	}
 }
@@ -162,10 +172,11 @@ func (d *Display) getCursorLineCol() (int, int) {
 }
 
 func (d *Display) adjustScrollForCursor() {
-	_, height := termbox.Size()
-	visibleLines := height - 1 // Hard code 1 line for status bar. Yes its a magic number. Fuck off, i'll fix it later.
+	width, height := termbox.Size()
+	visibleLines := height - 1 // Hard code 1 line for status bar. Yes its a magic number. FUck off.
+	visibleCols := width
 
-	cursorLine, _ := d.getCursorLineCol()
+	cursorLine, cursorCol := d.getCursorLineCol()
 
 	margin := 3
 
@@ -175,5 +186,13 @@ func (d *Display) adjustScrollForCursor() {
 
 	if cursorLine < d.scrollY+margin {
 		d.scrollY = max(cursorLine-margin, 0)
+	}
+
+	if cursorCol >= d.scrollX+visibleCols-margin {
+		d.scrollX = cursorCol - visibleCols + margin + 1
+	}
+
+	if cursorCol < d.scrollX+margin {
+		d.scrollX = max(cursorCol-margin, 0)
 	}
 }
