@@ -39,8 +39,8 @@ Plan:
    - Render to display only relevant text? (Hmm gonna be funky this one?) `Done`
    - Horizontal scrolling? `Done`
  - Undo and redo?
-   - Create struct for edit actions
-   - Add interface to editor for undo redo
+   - Create command interface and command types
+   - Update insert/delete operations to execute commands.
    - Implement Undo, add tests
    - Implement Redo, add tests
    - Add keyboard shortcuts
