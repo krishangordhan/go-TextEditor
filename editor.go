@@ -127,8 +127,10 @@ func (e *Editor) MoveCursorDown() {
 
 func (e *Editor) InsertAtCursor(text string) {
 	pos := e.cursor.GetPosition()
-	e.buffer.Insert(pos, text)
-	e.cursor.SetPosition(pos + len([]rune(text)))
+	cmd := NewInsertCommand(e.buffer, e.cursor, text, pos)
+	cmd.Execute()
+	e.undoStack = append(e.undoStack, cmd)
+	e.redoStack = make([]Command, 0)
 	e.fileManager.MarkDirty()
 }
 
@@ -137,15 +139,20 @@ func (e *Editor) DeleteAtCursor(length int) {
 		return
 	}
 	pos := e.cursor.GetPosition()
-	e.buffer.Delete(pos, length)
+	cmd := NewDeleteCommand(e.buffer, e.cursor, pos, length)
+	cmd.Execute()
+	e.undoStack = append(e.undoStack, cmd)
+	e.redoStack = make([]Command, 0)
 	e.fileManager.MarkDirty()
 }
 
 func (e *Editor) Backspace() {
 	pos := e.cursor.GetPosition()
 	if pos > 0 {
-		e.buffer.Delete(pos-1, 1)
-		e.cursor.SetPosition(pos - 1)
+		cmd := NewDeleteCommand(e.buffer, e.cursor, pos-1, 1)
+		cmd.Execute()
+		e.undoStack = append(e.undoStack, cmd)
+		e.redoStack = make([]Command, 0)
 		e.fileManager.MarkDirty()
 	}
 }
@@ -153,7 +160,10 @@ func (e *Editor) Backspace() {
 func (e *Editor) Delete() {
 	pos := e.cursor.GetPosition()
 	if pos < e.buffer.Length() {
-		e.buffer.Delete(pos, 1)
+		cmd := NewDeleteCommand(e.buffer, e.cursor, pos, 1)
+		cmd.Execute()
+		e.undoStack = append(e.undoStack, cmd)
+		e.redoStack = make([]Command, 0)
 		e.fileManager.MarkDirty()
 	}
 }

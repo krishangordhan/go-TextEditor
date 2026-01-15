@@ -452,3 +452,102 @@ func readFile(path string) (string, error) {
 	fm := NewFileManagerWithPath(path)
 	return fm.ReadFile()
 }
+
+func TestEditor_InsertAtCursor_PushesToUndoStack(t *testing.T) {
+	editor := NewEditor("Hello")
+	editor.SetCursorPosition(5)
+
+	if len(editor.undoStack) != 0 {
+		t.Errorf("Expected empty undo stack, got length %d", len(editor.undoStack))
+	}
+
+	editor.InsertAtCursor(" World")
+
+	if len(editor.undoStack) != 1 {
+		t.Errorf("Expected undo stack length 1, got %d", len(editor.undoStack))
+	}
+
+	if len(editor.redoStack) != 0 {
+		t.Errorf("Expected empty redo stack, got length %d", len(editor.redoStack))
+	}
+}
+
+func TestEditor_MultipleInserts_BuildsUndoStack(t *testing.T) {
+	editor := NewEditor("")
+
+	editor.InsertAtCursor("H")
+	editor.InsertAtCursor("i")
+
+	if len(editor.undoStack) != 2 {
+		t.Errorf("Expected undo stack length 2, got %d", len(editor.undoStack))
+	}
+
+	if editor.GetText() != "Hi" {
+		t.Errorf("Expected 'Hi', got '%s'", editor.GetText())
+	}
+}
+
+func TestEditor_Backspace_PushesToUndoStack(t *testing.T) {
+	editor := NewEditor("Hello")
+	editor.SetCursorPosition(5)
+
+	editor.Backspace()
+
+	if len(editor.undoStack) != 1 {
+		t.Errorf("Expected undo stack length 1, got %d", len(editor.undoStack))
+	}
+
+	if editor.GetText() != "Hell" {
+		t.Errorf("Expected 'Hell', got '%s'", editor.GetText())
+	}
+}
+
+func TestEditor_Delete_PushesToUndoStack(t *testing.T) {
+	editor := NewEditor("Hello")
+	editor.SetCursorPosition(0)
+
+	editor.Delete()
+
+	if len(editor.undoStack) != 1 {
+		t.Errorf("Expected undo stack length 1, got %d", len(editor.undoStack))
+	}
+
+	if editor.GetText() != "ello" {
+		t.Errorf("Expected 'ello', got '%s'", editor.GetText())
+	}
+}
+
+func TestEditor_NewOperation_ClearsRedoStack(t *testing.T) {
+	editor := NewEditor("Hello")
+	editor.SetCursorPosition(5)
+
+	// Simulate redo stack having content
+	cmd := NewInsertCommand(editor.buffer, editor.cursor, "test", 0)
+	editor.redoStack = append(editor.redoStack, cmd)
+
+	if len(editor.redoStack) != 1 {
+		t.Errorf("Setup: Expected redo stack length 1, got %d", len(editor.redoStack))
+	}
+
+	// New operation should clear redo stack
+	editor.InsertAtCursor("!")
+
+	if len(editor.redoStack) != 0 {
+		t.Errorf("Expected redo stack cleared, got length %d", len(editor.redoStack))
+	}
+}
+
+func TestEditor_DeleteAtCursor_PushesToUndoStack(t *testing.T) {
+	editor := NewEditor("Hello World")
+	editor.SetCursorPosition(6)
+
+	editor.DeleteAtCursor(5)
+
+	if len(editor.undoStack) != 1 {
+		t.Errorf("Expected undo stack length 1, got %d", len(editor.undoStack))
+	}
+
+	if editor.GetText() != "Hello " {
+		t.Errorf("Expected 'Hello ', got '%s'", editor.GetText())
+	}
+}
