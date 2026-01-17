@@ -194,3 +194,17 @@ func (e *Editor) Undo() {
 
 	e.redoStack = append(e.redoStack, cmd)
 }
+
+func (e *Editor) Redo() {
+	if len(e.redoStack) == 0 {
+		return
+	}
+
+	lastIndex := len(e.redoStack) - 1
+	cmd := e.redoStack[lastIndex]
+	e.redoStack = e.redoStack[:lastIndex]
+
+	cmd.Execute()
+
+	e.undoStack = append(e.undoStack, cmd)
+}
