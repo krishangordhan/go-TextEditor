@@ -973,3 +973,170 @@ func TestEditor_RedoAfterPartialUndo(t *testing.T) {
 		t.Errorf("Expected redo stack length 1, got %d", len(editor.redoStack))
 	}
 }
+
+func TestEditor_MoveCursorLeftWithSelection(t *testing.T) {
+	editor := NewEditor("Hello World")
+	editor.SetCursorPosition(5)
+
+	editor.MoveCursorLeftWithSelection()
+
+	if !editor.HasSelection() {
+		t.Error("Expected selection to be active")
+	}
+
+	start, end := editor.GetSelection()
+	if start != 4 || end != 5 {
+		t.Errorf("Expected selection (4, 5), got (%d, %d)", start, end)
+	}
+}
+
+func TestEditor_MoveCursorRightWithSelection(t *testing.T) {
+	editor := NewEditor("Hello World")
+	editor.SetCursorPosition(5)
+
+	editor.MoveCursorRightWithSelection()
+
+	if !editor.HasSelection() {
+		t.Error("Expected selection to be active")
+	}
+
+	start, end := editor.GetSelection()
+	if start != 5 || end != 6 {
+		t.Errorf("Expected selection (5, 6), got (%d, %d)", start, end)
+	}
+}
+
+func TestEditor_MoveCursorUpWithSelection(t *testing.T) {
+	editor := NewEditor("Hello\nWorld")
+	editor.SetCursorPosition(8)
+
+	editor.MoveCursorUpWithSelection()
+
+	if !editor.HasSelection() {
+		t.Error("Expected selection to be active")
+	}
+
+	start, end := editor.GetSelection()
+	// Moving up from position 8 (col 2 in line 1) goes to position 2 (col 2 in line 0)
+	if start != 2 || end != 8 {
+		t.Errorf("Expected selection (2, 8), got (%d, %d)", start, end)
+	}
+}
+
+func TestEditor_MoveCursorDownWithSelection(t *testing.T) {
+	editor := NewEditor("Hello\nWorld")
+	editor.SetCursorPosition(2)
+
+	editor.MoveCursorDownWithSelection()
+
+	if !editor.HasSelection() {
+		t.Error("Expected selection to be active")
+	}
+
+	start, end := editor.GetSelection()
+	if start != 2 || end != 8 {
+		t.Errorf("Expected selection (2, 8), got (%d, %d)", start, end)
+	}
+}
+
+func TestEditor_ExtendSelectionMultipleMoves(t *testing.T) {
+	editor := NewEditor("Hello World")
+	editor.SetCursorPosition(5)
+
+	editor.MoveCursorRightWithSelection()
+	editor.MoveCursorRightWithSelection()
+	editor.MoveCursorRightWithSelection()
+
+	start, end := editor.GetSelection()
+	if start != 5 || end != 8 {
+		t.Errorf("Expected selection (5, 8), got (%d, %d)", start, end)
+	}
+}
+
+func TestEditor_SelectionBackward(t *testing.T) {
+	editor := NewEditor("Hello World")
+	editor.SetCursorPosition(5)
+
+	editor.MoveCursorLeftWithSelection()
+	editor.MoveCursorLeftWithSelection()
+
+	start, end := editor.GetSelection()
+	if start != 3 || end != 5 {
+		t.Errorf("Expected selection (3, 5), got (%d, %d)", start, end)
+	}
+}
+
+func TestEditor_ClearSelection(t *testing.T) {
+	editor := NewEditor("Hello World")
+	editor.SetCursorPosition(5)
+
+	editor.MoveCursorRightWithSelection()
+
+	if !editor.HasSelection() {
+		t.Error("Expected selection before clear")
+	}
+
+	editor.ClearSelection()
+
+	if editor.HasSelection() {
+		t.Error("Expected no selection after clear")
+	}
+}
+
+func TestEditor_HasSelection_NoSelection(t *testing.T) {
+	editor := NewEditor("Hello World")
+
+	if editor.HasSelection() {
+		t.Error("Expected no selection in new editor")
+	}
+}
+
+func TestEditor_GetSelection_NoSelection(t *testing.T) {
+	editor := NewEditor("Hello World")
+	editor.SetCursorPosition(5)
+
+	start, end := editor.GetSelection()
+	if start != 5 || end != 5 {
+		t.Errorf("Expected (5, 5) when no selection, got (%d, %d)", start, end)
+	}
+}
+
+func TestEditor_SelectionBidirectional(t *testing.T) {
+	editor := NewEditor("Hello World")
+	editor.SetCursorPosition(5)
+
+	editor.MoveCursorRightWithSelection()
+	editor.MoveCursorRightWithSelection()
+
+	start, end := editor.GetSelection()
+	if start != 5 || end != 7 {
+		t.Errorf("After forward: Expected (5, 7), got (%d, %d)", start, end)
+	}
+
+	editor.MoveCursorLeftWithSelection()
+	editor.MoveCursorLeftWithSelection()
+	editor.MoveCursorLeftWithSelection()
+	editor.MoveCursorLeftWithSelection()
+
+	start, end = editor.GetSelection()
+	if start != 3 || end != 5 {
+		t.Errorf("After backward: Expected (3, 5), got (%d, %d)", start, end)
+	}
+}
+
+func TestEditor_SelectMultipleLines(t *testing.T) {
+	editor := NewEditor("Line1\nLine2\nLine3")
+	editor.SetCursorPosition(0)
+
+	editor.MoveCursorDownWithSelection()
+	editor.MoveCursorDownWithSelection()
+
+	if !editor.HasSelection() {
+		t.Error("Expected selection across multiple lines")
+	}
+
+	start, end := editor.GetSelection()
+	if start != 0 || end != 12 {
+		t.Errorf("Expected selection (0, 12), got (%d, %d)", start, end)
+	}
+}

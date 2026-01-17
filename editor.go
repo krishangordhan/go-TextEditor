@@ -66,13 +66,60 @@ func (e *Editor) MoveCursorLeft() {
 	e.desiredCol = col
 }
 
+func (e *Editor) MoveCursorLeftWithSelection() {
+	if !e.cursor.HasSelection() {
+		e.cursor.StartSelection()
+	}
+	e.cursor.MoveLeft()
+	_, col := e.buffer.GetLineColumn(e.cursor.GetPosition())
+	e.desiredCol = col
+}
+
 func (e *Editor) MoveCursorRight() {
 	e.cursor.MoveRight(e.buffer.Length())
 	_, col := e.buffer.GetLineColumn(e.cursor.GetPosition())
 	e.desiredCol = col
 }
 
+func (e *Editor) MoveCursorRightWithSelection() {
+	if !e.cursor.HasSelection() {
+		e.cursor.StartSelection()
+	}
+	e.cursor.MoveRight(e.buffer.Length())
+	_, col := e.buffer.GetLineColumn(e.cursor.GetPosition())
+	e.desiredCol = col
+}
+
 func (e *Editor) MoveCursorUp() {
+	pos := e.cursor.GetPosition()
+	line, col := e.buffer.GetLineColumn(pos)
+
+	if e.desiredCol == 0 {
+		e.desiredCol = col
+	}
+
+	if line > 0 {
+		targetLine := line - 1
+		targetCol := e.desiredCol
+
+		lineLength := e.buffer.GetLineLength(targetLine)
+		if targetCol > lineLength {
+			targetCol = lineLength
+		}
+
+		newPos := e.buffer.GetOffsetFromLineColumn(targetLine, targetCol)
+		e.cursor.SetPosition(newPos)
+	} else {
+		e.cursor.SetPosition(0)
+		e.desiredCol = 0
+	}
+}
+
+func (e *Editor) MoveCursorUpWithSelection() {
+	if !e.cursor.HasSelection() {
+		e.cursor.StartSelection()
+	}
+
 	pos := e.cursor.GetPosition()
 	line, col := e.buffer.GetLineColumn(pos)
 
@@ -123,6 +170,50 @@ func (e *Editor) MoveCursorDown() {
 		_, col := e.buffer.GetLineColumn(e.buffer.Length())
 		e.desiredCol = col
 	}
+}
+
+func (e *Editor) MoveCursorDownWithSelection() {
+	if !e.cursor.HasSelection() {
+		e.cursor.StartSelection()
+	}
+
+	pos := e.cursor.GetPosition()
+	line, col := e.buffer.GetLineColumn(pos)
+
+	if e.desiredCol == 0 {
+		e.desiredCol = col
+	}
+
+	lineCount := e.buffer.GetLineCount()
+
+	if line < lineCount-1 {
+		targetLine := line + 1
+		targetCol := e.desiredCol
+
+		lineLength := e.buffer.GetLineLength(targetLine)
+		if targetCol > lineLength {
+			targetCol = lineLength
+		}
+
+		newPos := e.buffer.GetOffsetFromLineColumn(targetLine, targetCol)
+		e.cursor.SetPosition(newPos)
+	} else {
+		e.cursor.SetPosition(e.buffer.Length())
+		_, col := e.buffer.GetLineColumn(e.buffer.Length())
+		e.desiredCol = col
+	}
+}
+
+func (e *Editor) HasSelection() bool {
+	return e.cursor.HasSelection()
+}
+
+func (e *Editor) GetSelection() (int, int) {
+	return e.cursor.GetSelection()
+}
+
+func (e *Editor) ClearSelection() {
+	e.cursor.ClearSelection()
 }
 
 func (e *Editor) InsertAtCursor(text string) {
