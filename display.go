@@ -51,6 +51,8 @@ func (d *Display) renderEditor() {
 
 	text := d.editor.GetText()
 	cursorPos := d.editor.GetCursorPosition()
+	hasSelection := d.editor.HasSelection()
+	selStart, selEnd := d.editor.GetSelection()
 
 	x, y := 0, 0
 	lineNum := 0
@@ -73,6 +75,11 @@ func (d *Display) renderEditor() {
 
 		fg := termbox.ColorDefault
 		bg := termbox.ColorDefault
+
+		if hasSelection && i >= selStart && i < selEnd {
+			fg = termbox.ColorBlack
+			bg = termbox.ColorCyan
+		}
 
 		if i == cursorPos {
 			bg = termbox.ColorWhite
