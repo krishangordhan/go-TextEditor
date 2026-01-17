@@ -180,3 +180,17 @@ func (e *Editor) SaveAs(filePath string) error {
 	e.fileManager.SetFilePath(filePath)
 	return e.fileManager.WriteFile(e.buffer.String())
 }
+
+func (e *Editor) Undo() {
+	if len(e.undoStack) == 0 {
+		return
+	}
+
+	lastIndex := len(e.undoStack) - 1
+	cmd := e.undoStack[lastIndex]
+	e.undoStack = e.undoStack[:lastIndex]
+
+	cmd.Undo()
+
+	e.redoStack = append(e.redoStack, cmd)
+}
