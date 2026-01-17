@@ -102,6 +102,14 @@ func main() {
 				continue
 			}
 
+			if ev.Key == termbox.KeyCtrlZ {
+				editor.Undo()
+			}
+
+			if ev.Key == termbox.KeyCtrlY {
+				editor.Redo()
+			}
+
 			switch ev.Key {
 			case termbox.KeyArrowLeft:
 				editor.MoveCursorLeft()
