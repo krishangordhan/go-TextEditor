@@ -1,11 +1,15 @@
 package main
 
 type Cursor struct {
-	position int
+	position        int
+	selectionAnchor int
 }
 
 func NewCursor() *Cursor {
-	return &Cursor{position: 0}
+	return &Cursor{
+		position:        0,
+		selectionAnchor: -1,
+	}
 }
 
 func (c *Cursor) GetPosition() int {
@@ -29,4 +33,31 @@ func (c *Cursor) MoveRight(maxLength int) {
 	if c.position < maxLength {
 		c.position++
 	}
+}
+
+func (c *Cursor) StartSelection() {
+	c.selectionAnchor = c.position
+}
+
+func (c *Cursor) ClearSelection() {
+	c.selectionAnchor = -1
+}
+
+func (c *Cursor) HasSelection() bool {
+	return c.selectionAnchor >= 0 && c.selectionAnchor != c.position
+}
+
+func (c *Cursor) GetSelection() (int, int) {
+	if !c.HasSelection() {
+		return c.position, c.position
+	}
+
+	if c.selectionAnchor < c.position {
+		return c.selectionAnchor, c.position
+	}
+	return c.position, c.selectionAnchor
+}
+
+func (c *Cursor) GetSelectionAnchor() int {
+	return c.selectionAnchor
 }
