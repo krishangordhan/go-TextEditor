@@ -38,11 +38,31 @@ Plan:
    - Implement vertical scrolling logic, 3-line margin `Done`
    - Render to display only relevant text? (Hmm gonna be funky this one?) `Done`
    - Horizontal scrolling? `Done`
- - Undo and redo?
-   - Create command interface and command types
-   - Update insert/delete operations to execute commands.
-   - Implement Undo, add tests
-   - Implement Redo, add tests
-   - Add keyboard shortcuts
-   - Edge cases, empty undo stack, redo after new edit
- - Yes, add more.
+ - Undo and redo? `Done`
+   - Create command interface and command types `Done`
+   - Update insert/delete operations to execute commands `Done`
+   - Implement Undo, add tests `Done`
+   - Implement Redo, add tests `Done`
+   - Add keyboard shortcuts `Done`
+   - Edge cases, empty undo stack, redo after new edit `Not Done. Well done all but redo after new edit`
+ - Text selection
+   - Add select start and end to cursor
+   - Track selection in Editor
+   - Render selection in display
+   - Delete selection on backspace or delete
+   - Replace selection on insert
+   - Edge cases
+ - Copy and paste
+   - System clipboard library
+   - Copy selection to clipboard
+   - Paste from clipboard at cursor
+   - Update undo/redo to support this
+   - Keyboard shortcutes
+ - Line numbers
+   - Add line number rendering
+   - Calculate width based on line count
+   - Adjust scrolling horizontally for line numbers. And cursor?
+ - Auto indent
+   - Detect indentation of current line.
+   - Insert new line with same indentation
+   - Figure out edge cases (empty lines, mixed tabs and spaces) 
