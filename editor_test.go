@@ -736,3 +736,240 @@ func TestEditor_Undo_PreservesCursorColumn(t *testing.T) {
 		t.Errorf("After undo: Expected cursor at 11, got %d", editor.GetCursorPosition())
 	}
 }
+
+func TestEditor_Redo_EmptyStack(t *testing.T) {
+	editor := NewEditor("Hello")
+
+	editor.Redo()
+
+	if editor.GetText() != "Hello" {
+		t.Errorf("Expected 'Hello', got '%s'", editor.GetText())
+	}
+
+	if len(editor.redoStack) != 0 {
+		t.Errorf("Expected empty redo stack, got length %d", len(editor.redoStack))
+	}
+}
+
+func TestEditor_Redo_SingleInsert(t *testing.T) {
+	editor := NewEditor("Hello")
+	editor.SetCursorPosition(5)
+	editor.InsertAtCursor(" World")
+
+	editor.Undo()
+	if editor.GetText() != "Hello" {
+		t.Errorf("After undo: Expected 'Hello', got '%s'", editor.GetText())
+	}
+
+	editor.Redo()
+
+	if editor.GetText() != "Hello World" {
+		t.Errorf("After redo: Expected 'Hello World', got '%s'", editor.GetText())
+	}
+
+	if editor.GetCursorPosition() != 11 {
+		t.Errorf("After redo: Expected cursor at 11, got %d", editor.GetCursorPosition())
+	}
+
+	if len(editor.redoStack) != 0 {
+		t.Errorf("Expected empty redo stack, got length %d", len(editor.redoStack))
+	}
+
+	if len(editor.undoStack) != 1 {
+		t.Errorf("Expected undo stack length 1, got %d", len(editor.undoStack))
+	}
+}
+
+func TestEditor_Redo_SingleDelete(t *testing.T) {
+	editor := NewEditor("Hello World")
+	editor.SetCursorPosition(5)
+	editor.Delete()
+
+	editor.Undo()
+	if editor.GetText() != "Hello World" {
+		t.Errorf("After undo: Expected 'Hello World', got '%s'", editor.GetText())
+	}
+
+	editor.Redo()
+
+	if editor.GetText() != "HelloWorld" {
+		t.Errorf("After redo: Expected 'HelloWorld', got '%s'", editor.GetText())
+	}
+
+	if editor.GetCursorPosition() != 5 {
+		t.Errorf("After redo: Expected cursor at 5, got %d", editor.GetCursorPosition())
+	}
+}
+
+func TestEditor_Redo_MultipleOperations(t *testing.T) {
+	editor := NewEditor("")
+
+	editor.InsertAtCursor("H")
+	editor.InsertAtCursor("e")
+	editor.InsertAtCursor("l")
+	editor.InsertAtCursor("l")
+	editor.InsertAtCursor("o")
+
+	editor.Undo()
+	editor.Undo()
+	editor.Undo()
+
+	if editor.GetText() != "He" {
+		t.Errorf("After undos: Expected 'He', got '%s'", editor.GetText())
+	}
+
+	editor.Redo()
+	if editor.GetText() != "Hel" {
+		t.Errorf("After 1st redo: Expected 'Hel', got '%s'", editor.GetText())
+	}
+
+	editor.Redo()
+	if editor.GetText() != "Hell" {
+		t.Errorf("After 2nd redo: Expected 'Hell', got '%s'", editor.GetText())
+	}
+
+	if len(editor.redoStack) != 1 {
+		t.Errorf("Expected redo stack length 1, got %d", len(editor.redoStack))
+	}
+
+	if len(editor.undoStack) != 4 {
+		t.Errorf("Expected undo stack length 4, got %d", len(editor.undoStack))
+	}
+}
+
+func TestEditor_Redo_ComplexSequence(t *testing.T) {
+	editor := NewEditor("Hello")
+	editor.SetCursorPosition(5)
+
+	editor.InsertAtCursor(" World")
+
+	editor.SetCursorPosition(6)
+	editor.DeleteAtCursor(5)
+
+	if editor.GetText() != "Hello " {
+		t.Errorf("After operations: Expected 'Hello ', got '%s'", editor.GetText())
+	}
+
+	editor.Undo()
+	editor.Undo()
+
+	if editor.GetText() != "Hello" {
+		t.Errorf("After undos: Expected 'Hello', got '%s'", editor.GetText())
+	}
+
+	editor.Redo()
+	if editor.GetText() != "Hello World" {
+		t.Errorf("After 1st redo: Expected 'Hello World', got '%s'", editor.GetText())
+	}
+
+	editor.Redo()
+	if editor.GetText() != "Hello " {
+		t.Errorf("After 2nd redo: Expected 'Hello ', got '%s'", editor.GetText())
+	}
+}
+
+func TestEditor_Redo_AllOperations(t *testing.T) {
+	editor := NewEditor("")
+
+	editor.InsertAtCursor("a")
+	editor.InsertAtCursor("b")
+	editor.InsertAtCursor("c")
+
+	editor.Undo()
+	editor.Undo()
+	editor.Undo()
+
+	if editor.GetText() != "" {
+		t.Errorf("After undos: Expected empty, got '%s'", editor.GetText())
+	}
+
+	editor.Redo()
+	editor.Redo()
+	editor.Redo()
+
+	if editor.GetText() != "abc" {
+		t.Errorf("After redos: Expected 'abc', got '%s'", editor.GetText())
+	}
+
+	if len(editor.redoStack) != 0 {
+		t.Errorf("Expected empty redo stack, got length %d", len(editor.redoStack))
+	}
+
+	if len(editor.undoStack) != 3 {
+		t.Errorf("Expected undo stack length 3, got %d", len(editor.undoStack))
+	}
+}
+
+func TestEditor_Redo_ClearedByNewOperation(t *testing.T) {
+	editor := NewEditor("Hello")
+	editor.SetCursorPosition(5)
+
+	editor.InsertAtCursor(" World")
+	editor.Undo()
+
+	if len(editor.redoStack) != 1 {
+		t.Errorf("Before new op: Expected redo stack length 1, got %d", len(editor.redoStack))
+	}
+
+	editor.InsertAtCursor("!")
+
+	if len(editor.redoStack) != 0 {
+		t.Errorf("After new op: Expected empty redo stack, got length %d", len(editor.redoStack))
+	}
+
+	if editor.GetText() != "Hello!" {
+		t.Errorf("Expected 'Hello!', got '%s'", editor.GetText())
+	}
+}
+
+func TestEditor_UndoRedo_PreservesCursor(t *testing.T) {
+	editor := NewEditor("Hello")
+	editor.SetCursorPosition(5)
+
+	editor.InsertAtCursor(" World")
+
+	initialCursor := editor.GetCursorPosition()
+	if initialCursor != 11 {
+		t.Errorf("After insert: Expected cursor at 11, got %d", initialCursor)
+	}
+
+	editor.Undo()
+	if editor.GetCursorPosition() != 5 {
+		t.Errorf("After undo: Expected cursor at 5, got %d", editor.GetCursorPosition())
+	}
+
+	editor.Redo()
+	if editor.GetCursorPosition() != 11 {
+		t.Errorf("After redo: Expected cursor at 11, got %d", editor.GetCursorPosition())
+	}
+}
+
+func TestEditor_RedoAfterPartialUndo(t *testing.T) {
+	editor := NewEditor("")
+
+	editor.InsertAtCursor("a")
+	editor.InsertAtCursor("b")
+	editor.InsertAtCursor("c")
+	editor.InsertAtCursor("d")
+
+	editor.Undo()
+	editor.Undo()
+
+	if editor.GetText() != "ab" {
+		t.Errorf("After undos: Expected 'ab', got '%s'", editor.GetText())
+	}
+
+	editor.Redo()
+
+	if editor.GetText() != "abc" {
+		t.Errorf("After redo: Expected 'abc', got '%s'", editor.GetText())
+	}
+
+	if len(editor.undoStack) != 3 {
+		t.Errorf("Expected undo stack length 3, got %d", len(editor.undoStack))
+	}
+
+	if len(editor.redoStack) != 1 {
+		t.Errorf("Expected redo stack length 1, got %d", len(editor.redoStack))
+	}
+}
