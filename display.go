@@ -138,7 +138,7 @@ func (d *Display) renderStatusBar() {
 
 	leftStatus := fmt.Sprintf(" %s%s | Ln %d, Col %d", filename, modifiedIndicator, line+1, col)
 
-	rightStatus := "Ctrl+S: Save | Ctrl+W: Save As | Ctrl+Q: Quit "
+	rightStatus := "Ctrl+Z: Undo | Ctrl+Y: Redo | Ctrl+S: Save | Ctrl+W: Save As | Ctrl+Q: Quit "
 
 	for i := 0; i < width; i++ {
 		termbox.SetCell(i, statusY, ' ', termbox.ColorBlack, termbox.ColorWhite)
