@@ -110,37 +110,30 @@ func main() {
 				editor.Redo()
 			}
 
-			isAltPressed := (ev.Mod & termbox.ModAlt) != 0
+			switch ev.Key {
+			case termbox.KeyCtrlJ:
+				editor.MoveCursorLeftWithSelection()
+			case termbox.KeyCtrlL:
+				editor.MoveCursorRightWithSelection()
+			case termbox.KeyCtrlI:
+				editor.MoveCursorUpWithSelection()
+			case termbox.KeyCtrlK:
+				editor.MoveCursorDownWithSelection()
+			}
 
 			switch ev.Key {
 			case termbox.KeyArrowLeft:
-				if isAltPressed {
-					editor.MoveCursorLeftWithSelection()
-				} else {
-					editor.ClearSelection()
-					editor.MoveCursorLeft()
-				}
+				editor.ClearSelection()
+				editor.MoveCursorLeft()
 			case termbox.KeyArrowRight:
-				if isAltPressed {
-					editor.MoveCursorRightWithSelection()
-				} else {
-					editor.ClearSelection()
-					editor.MoveCursorRight()
-				}
+				editor.ClearSelection()
+				editor.MoveCursorRight()
 			case termbox.KeyArrowUp:
-				if isAltPressed {
-					editor.MoveCursorUpWithSelection()
-				} else {
-					editor.ClearSelection()
-					editor.MoveCursorUp()
-				}
+				editor.ClearSelection()
+				editor.MoveCursorUp()
 			case termbox.KeyArrowDown:
-				if isAltPressed {
-					editor.MoveCursorDownWithSelection()
-				} else {
-					editor.ClearSelection()
-					editor.MoveCursorDown()
-				}
+				editor.ClearSelection()
+				editor.MoveCursorDown()
 			case termbox.KeyBackspace, termbox.KeyBackspace2:
 				editor.Backspace()
 			case termbox.KeyDelete:
