@@ -1140,3 +1140,137 @@ func TestEditor_SelectMultipleLines(t *testing.T) {
 		t.Errorf("Expected selection (0, 12), got (%d, %d)", start, end)
 	}
 }
+
+func TestEditor_Backspace_DeletesSelection(t *testing.T) {
+	editor := NewEditor("Hello World")
+	editor.SetCursorPosition(0)
+
+	editor.MoveCursorRightWithSelection()
+	editor.MoveCursorRightWithSelection()
+	editor.MoveCursorRightWithSelection()
+	editor.MoveCursorRightWithSelection()
+	editor.MoveCursorRightWithSelection()
+	editor.MoveCursorRightWithSelection()
+
+	if !editor.HasSelection() {
+		t.Error("Expected selection before backspace")
+	}
+
+	editor.Backspace()
+
+	if editor.GetText() != "World" {
+		t.Errorf("Expected 'World', got '%s'", editor.GetText())
+	}
+
+	if editor.HasSelection() {
+		t.Error("Expected no selection after backspace")
+	}
+
+	if editor.GetCursorPosition() != 0 {
+		t.Errorf("Expected cursor at 0, got %d", editor.GetCursorPosition())
+	}
+}
+
+func TestEditor_Delete_DeletesSelection(t *testing.T) {
+	editor := NewEditor("Hello World")
+	editor.SetCursorPosition(6)
+
+	editor.MoveCursorRightWithSelection()
+	editor.MoveCursorRightWithSelection()
+	editor.MoveCursorRightWithSelection()
+	editor.MoveCursorRightWithSelection()
+	editor.MoveCursorRightWithSelection()
+
+	if !editor.HasSelection() {
+		t.Error("Expected selection before delete")
+	}
+
+	editor.Delete()
+
+	if editor.GetText() != "Hello " {
+		t.Errorf("Expected 'Hello ', got '%s'", editor.GetText())
+	}
+
+	if editor.HasSelection() {
+		t.Error("Expected no selection after delete")
+	}
+
+	if editor.GetCursorPosition() != 6 {
+		t.Errorf("Expected cursor at 6, got %d", editor.GetCursorPosition())
+	}
+}
+
+func TestEditor_Backspace_BackwardSelection(t *testing.T) {
+	editor := NewEditor("Hello World")
+	editor.SetCursorPosition(6)
+
+	editor.MoveCursorLeftWithSelection()
+	editor.MoveCursorLeftWithSelection()
+	editor.MoveCursorLeftWithSelection()
+	editor.MoveCursorLeftWithSelection()
+	editor.MoveCursorLeftWithSelection()
+	editor.MoveCursorLeftWithSelection()
+
+	editor.Backspace()
+
+	if editor.GetText() != "World" {
+		t.Errorf("Expected 'World', got '%s'", editor.GetText())
+	}
+
+	if editor.GetCursorPosition() != 0 {
+		t.Errorf("Expected cursor at 0, got %d", editor.GetCursorPosition())
+	}
+}
+
+func TestEditor_Delete_MultiLineSelection(t *testing.T) {
+	editor := NewEditor("Line1\nLine2\nLine3")
+	editor.SetCursorPosition(0)
+
+	editor.MoveCursorDownWithSelection()
+	editor.MoveCursorDownWithSelection()
+
+	start, end := editor.GetSelection()
+
+	editor.Delete()
+
+	expected := "Line3"
+	if editor.GetText() != expected {
+		t.Errorf("Expected '%s', got '%s' (deleted range %d-%d)", expected, editor.GetText(), start, end)
+	}
+
+	if editor.HasSelection() {
+		t.Error("Expected no selection after delete")
+	}
+}
+
+func TestEditor_Backspace_UndoDeletesSelection(t *testing.T) {
+	editor := NewEditor("Hello World")
+	editor.SetCursorPosition(0)
+
+	for i := 0; i < 6; i++ {
+		editor.MoveCursorRightWithSelection()
+	}
+
+	editor.Backspace()
+
+	if editor.GetText() != "World" {
+		t.Errorf("After delete: Expected 'World', got '%s'", editor.GetText())
+	}
+
+	editor.Undo()
+
+	if editor.GetText() != "Hello World" {
+		t.Errorf("After undo: Expected 'Hello World', got '%s'", editor.GetText())
+	}
+}
+
+func TestEditor_Backspace_NoSelection(t *testing.T) {
+	editor := NewEditor("Hello")
+	editor.SetCursorPosition(5)
+
+	editor.Backspace()
+
+	if editor.GetText() != "Hell" {
+		t.Errorf("Expected 'Hell', got '%s'", editor.GetText())
+	}
+}
