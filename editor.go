@@ -238,6 +238,18 @@ func (e *Editor) DeleteAtCursor(length int) {
 }
 
 func (e *Editor) Backspace() {
+	if e.cursor.HasSelection() {
+		start, end := e.cursor.GetSelection()
+		length := end - start
+		cmd := NewDeleteCommand(e.buffer, e.cursor, start, length)
+		cmd.Execute()
+		e.cursor.ClearSelection()
+		e.undoStack = append(e.undoStack, cmd)
+		e.redoStack = make([]Command, 0)
+		e.fileManager.MarkDirty()
+		return
+	}
+
 	pos := e.cursor.GetPosition()
 	if pos > 0 {
 		cmd := NewDeleteCommand(e.buffer, e.cursor, pos-1, 1)
@@ -249,6 +261,18 @@ func (e *Editor) Backspace() {
 }
 
 func (e *Editor) Delete() {
+	if e.cursor.HasSelection() {
+		start, end := e.cursor.GetSelection()
+		length := end - start
+		cmd := NewDeleteCommand(e.buffer, e.cursor, start, length)
+		cmd.Execute()
+		e.cursor.ClearSelection()
+		e.undoStack = append(e.undoStack, cmd)
+		e.redoStack = make([]Command, 0)
+		e.fileManager.MarkDirty()
+		return
+	}
+
 	pos := e.cursor.GetPosition()
 	if pos < e.buffer.Length() {
 		cmd := NewDeleteCommand(e.buffer, e.cursor, pos, 1)
