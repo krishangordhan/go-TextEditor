@@ -1274,3 +1274,109 @@ func TestEditor_Backspace_NoSelection(t *testing.T) {
 		t.Errorf("Expected 'Hell', got '%s'", editor.GetText())
 	}
 }
+
+func TestEditor_InsertAtCursor_ReplacesSelection(t *testing.T) {
+	editor := NewEditor("Hello World")
+	editor.SetCursorPosition(0)
+
+	for i := 0; i < 6; i++ {
+		editor.MoveCursorRightWithSelection()
+	}
+
+	if !editor.HasSelection() {
+		t.Error("Expected selection before insert")
+	}
+
+	editor.InsertAtCursor("Hi")
+
+	if editor.GetText() != "HiWorld" {
+		t.Errorf("Expected 'HiWorld', got '%s'", editor.GetText())
+	}
+
+	if editor.HasSelection() {
+		t.Error("Expected no selection after insert")
+	}
+
+	if editor.GetCursorPosition() != 2 {
+		t.Errorf("Expected cursor at 2, got %d", editor.GetCursorPosition())
+	}
+}
+
+func TestEditor_InsertAtCursor_BackwardSelection(t *testing.T) {
+	editor := NewEditor("Hello World")
+	editor.SetCursorPosition(11)
+
+	for i := 0; i < 5; i++ {
+		editor.MoveCursorLeftWithSelection()
+	}
+
+	editor.InsertAtCursor("Universe")
+
+	if editor.GetText() != "Hello Universe" {
+		t.Errorf("Expected 'Hello Universe', got '%s'", editor.GetText())
+	}
+
+	if editor.GetCursorPosition() != 14 {
+		t.Errorf("Expected cursor at 14, got %d", editor.GetCursorPosition())
+	}
+}
+
+func TestEditor_InsertAtCursor_MultiLineSelection(t *testing.T) {
+	editor := NewEditor("Line1\nLine2\nLine3")
+	editor.SetCursorPosition(0)
+
+	editor.MoveCursorDownWithSelection()
+	editor.MoveCursorDownWithSelection()
+
+	editor.InsertAtCursor("New")
+
+	if editor.GetText() != "NewLine3" {
+		t.Errorf("Expected 'NewLine3', got '%s'", editor.GetText())
+	}
+
+	if editor.GetCursorPosition() != 3 {
+		t.Errorf("Expected cursor at 3, got %d", editor.GetCursorPosition())
+	}
+}
+
+func TestEditor_InsertAtCursor_UndoReplacesSelection(t *testing.T) {
+	editor := NewEditor("Hello World")
+	editor.SetCursorPosition(6)
+
+	for i := 0; i < 5; i++ {
+		editor.MoveCursorRightWithSelection()
+	}
+
+	editor.InsertAtCursor("Go")
+
+	if editor.GetText() != "Hello Go" {
+		t.Errorf("After insert: Expected 'Hello Go', got '%s'", editor.GetText())
+	}
+
+	editor.Undo()
+
+	if editor.GetText() != "Hello " {
+		t.Errorf("After first undo: Expected 'Hello ', got '%s'", editor.GetText())
+	}
+
+	editor.Undo()
+
+	if editor.GetText() != "Hello World" {
+		t.Errorf("After second undo: Expected 'Hello World', got '%s'", editor.GetText())
+	}
+}
+
+func TestEditor_InsertAtCursor_NoSelection(t *testing.T) {
+	editor := NewEditor("Hello")
+	editor.SetCursorPosition(5)
+
+	editor.InsertAtCursor(" World")
+
+	if editor.GetText() != "Hello World" {
+		t.Errorf("Expected 'Hello World', got '%s'", editor.GetText())
+	}
+
+	if editor.GetCursorPosition() != 11 {
+		t.Errorf("Expected cursor at 11, got %d", editor.GetCursorPosition())
+	}
+}

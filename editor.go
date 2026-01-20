@@ -217,6 +217,15 @@ func (e *Editor) ClearSelection() {
 }
 
 func (e *Editor) InsertAtCursor(text string) {
+	if e.cursor.HasSelection() {
+		start, end := e.cursor.GetSelection()
+		length := end - start
+		deleteCmd := NewDeleteCommand(e.buffer, e.cursor, start, length)
+		deleteCmd.Execute()
+		e.cursor.ClearSelection()
+		e.undoStack = append(e.undoStack, deleteCmd)
+	}
+
 	pos := e.cursor.GetPosition()
 	cmd := NewInsertCommand(e.buffer, e.cursor, text, pos)
 	cmd.Execute()
