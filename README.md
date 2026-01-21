@@ -52,12 +52,12 @@ Plan:
    - Delete selection on backspace or delete `Done`
    - Replace selection on insert `Done`
    - Edge cases `Done`
- - Copy and paste
-   - System clipboard library
-   - Copy selection to clipboard
-   - Paste from clipboard at cursor
-   - Update undo/redo to support this
-   - Keyboard shortcutes
+ - Copy and paste `Done`
+   - System clipboard library `Done`
+   - Copy selection to clipboard `Done`
+   - Paste from clipboard at cursor `Done`
+   - Update undo/redo to support this `Done`
+   - Keyboard shortcutes `Done`
  - Line numbers
    - Add line number rendering
    - Calculate width based on line count
