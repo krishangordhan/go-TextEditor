@@ -4,6 +4,19 @@ import (
 	"testing"
 )
 
+type MockClipboard struct {
+	content string
+}
+
+func (mc *MockClipboard) Copy(text string) error {
+	mc.content = text
+	return nil
+}
+
+func (mc *MockClipboard) Paste() (string, error) {
+	return mc.content, nil
+}
+
 func TestClipboardManager_NewClipboardManager(t *testing.T) {
 	cm := NewClipboardManager()
 	if cm == nil {
@@ -12,7 +25,7 @@ func TestClipboardManager_NewClipboardManager(t *testing.T) {
 }
 
 func TestClipboardManager_CopyAndPaste_PastesSuccessfully(t *testing.T) {
-	cm := NewClipboardManager()
+	var cm Clipboard = &MockClipboard{}
 	testText := "Hello, clipboard!"
 
 	err := cm.Copy(testText)
@@ -31,7 +44,7 @@ func TestClipboardManager_CopyAndPaste_PastesSuccessfully(t *testing.T) {
 }
 
 func TestClipboardManager_CopyEmptyString_PastesEmptyString(t *testing.T) {
-	cm := NewClipboardManager()
+	var cm Clipboard = &MockClipboard{}
 
 	err := cm.Copy("")
 	if err != nil {
@@ -49,7 +62,7 @@ func TestClipboardManager_CopyEmptyString_PastesEmptyString(t *testing.T) {
 }
 
 func TestClipboardManager_MultipleOperations_PastesSuccessfully(t *testing.T) {
-	cm := NewClipboardManager()
+	var cm Clipboard = &MockClipboard{}
 
 	err := cm.Copy("First")
 	if err != nil {

@@ -2,6 +2,11 @@ package main
 
 import "github.com/atotto/clipboard"
 
+type Clipboard interface {
+	Copy(text string) error
+	Paste() (string, error)
+}
+
 type ClipboardManager struct{}
 
 func NewClipboardManager() *ClipboardManager {
