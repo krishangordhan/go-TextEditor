@@ -61,13 +61,23 @@ func (e *Editor) SetCursorPosition(pos int) {
 }
 
 func (e *Editor) MoveCursorLeft() {
-	e.cursor.MoveLeft()
-	_, col := e.buffer.GetLineColumn(e.cursor.GetPosition())
-	e.desiredCol = col
+	e.moveCursorLeft(false)
 }
 
 func (e *Editor) MoveCursorLeftWithSelection() {
-	if !e.cursor.HasSelection() {
+	e.moveCursorLeft(true)
+}
+
+func (e *Editor) MoveCursorRight() {
+	e.moveCursorRight(false)
+}
+
+func (e *Editor) MoveCursorRightWithSelection() {
+	e.moveCursorRight(true)
+}
+
+func (e *Editor) moveCursorLeft(withSelection bool) {
+	if withSelection && !e.cursor.HasSelection() {
 		e.cursor.StartSelection()
 	}
 	e.cursor.MoveLeft()
@@ -75,14 +85,8 @@ func (e *Editor) MoveCursorLeftWithSelection() {
 	e.desiredCol = col
 }
 
-func (e *Editor) MoveCursorRight() {
-	e.cursor.MoveRight(e.buffer.Length())
-	_, col := e.buffer.GetLineColumn(e.cursor.GetPosition())
-	e.desiredCol = col
-}
-
-func (e *Editor) MoveCursorRightWithSelection() {
-	if !e.cursor.HasSelection() {
+func (e *Editor) moveCursorRight(withSelection bool) {
+	if withSelection && !e.cursor.HasSelection() {
 		e.cursor.StartSelection()
 	}
 	e.cursor.MoveRight(e.buffer.Length())
@@ -91,89 +95,31 @@ func (e *Editor) MoveCursorRightWithSelection() {
 }
 
 func (e *Editor) MoveCursorUp() {
-	pos := e.cursor.GetPosition()
-	line, col := e.buffer.GetLineColumn(pos)
-
-	if e.desiredCol == 0 {
-		e.desiredCol = col
-	}
-
-	if line > 0 {
-		targetLine := line - 1
-		targetCol := e.desiredCol
-
-		lineLength := e.buffer.GetLineLength(targetLine)
-		if targetCol > lineLength {
-			targetCol = lineLength
-		}
-
-		newPos := e.buffer.GetOffsetFromLineColumn(targetLine, targetCol)
-		e.cursor.SetPosition(newPos)
-	} else {
-		e.cursor.SetPosition(0)
-		e.desiredCol = 0
-	}
+	e.moveCursorUp(false)
 }
 
 func (e *Editor) MoveCursorUpWithSelection() {
-	if !e.cursor.HasSelection() {
-		e.cursor.StartSelection()
-	}
+	e.moveCursorUp(true)
+}
 
-	pos := e.cursor.GetPosition()
-	line, col := e.buffer.GetLineColumn(pos)
-
-	if e.desiredCol == 0 {
-		e.desiredCol = col
-	}
-
-	if line > 0 {
-		targetLine := line - 1
-		targetCol := e.desiredCol
-
-		lineLength := e.buffer.GetLineLength(targetLine)
-		if targetCol > lineLength {
-			targetCol = lineLength
-		}
-
-		newPos := e.buffer.GetOffsetFromLineColumn(targetLine, targetCol)
-		e.cursor.SetPosition(newPos)
-	} else {
-		e.cursor.SetPosition(0)
-		e.desiredCol = 0
-	}
+func (e *Editor) moveCursorUp(withSelection bool) {
+	e.moveCursorVertical(-1, withSelection)
 }
 
 func (e *Editor) MoveCursorDown() {
-	pos := e.cursor.GetPosition()
-	line, col := e.buffer.GetLineColumn(pos)
-
-	if e.desiredCol == 0 {
-		e.desiredCol = col
-	}
-
-	lineCount := e.buffer.GetLineCount()
-
-	if line < lineCount-1 {
-		targetLine := line + 1
-		targetCol := e.desiredCol
-
-		lineLength := e.buffer.GetLineLength(targetLine)
-		if targetCol > lineLength {
-			targetCol = lineLength
-		}
-
-		newPos := e.buffer.GetOffsetFromLineColumn(targetLine, targetCol)
-		e.cursor.SetPosition(newPos)
-	} else {
-		e.cursor.SetPosition(e.buffer.Length())
-		_, col := e.buffer.GetLineColumn(e.buffer.Length())
-		e.desiredCol = col
-	}
+	e.moveCursorDown(false)
 }
 
 func (e *Editor) MoveCursorDownWithSelection() {
-	if !e.cursor.HasSelection() {
+	e.moveCursorDown(true)
+}
+
+func (e *Editor) moveCursorDown(withSelection bool) {
+	e.moveCursorVertical(1, withSelection)
+}
+
+func (e *Editor) moveCursorVertical(direction int, withSelection bool) {
+	if withSelection && !e.cursor.HasSelection() {
 		e.cursor.StartSelection()
 	}
 
@@ -185,23 +131,28 @@ func (e *Editor) MoveCursorDownWithSelection() {
 	}
 
 	lineCount := e.buffer.GetLineCount()
+	targetLine := line + direction
 
-	if line < lineCount-1 {
-		targetLine := line + 1
-		targetCol := e.desiredCol
-
-		lineLength := e.buffer.GetLineLength(targetLine)
-		if targetCol > lineLength {
-			targetCol = lineLength
-		}
-
-		newPos := e.buffer.GetOffsetFromLineColumn(targetLine, targetCol)
-		e.cursor.SetPosition(newPos)
-	} else {
+	if targetLine < 0 {
+		e.cursor.SetPosition(0)
+		e.desiredCol = 0
+		return
+	}
+	if targetLine >= lineCount {
 		e.cursor.SetPosition(e.buffer.Length())
 		_, col := e.buffer.GetLineColumn(e.buffer.Length())
 		e.desiredCol = col
+		return
 	}
+
+	targetCol := e.desiredCol
+	lineLength := e.buffer.GetLineLength(targetLine)
+	if targetCol > lineLength {
+		targetCol = lineLength
+	}
+
+	newPos := e.buffer.GetOffsetFromLineColumn(targetLine, targetCol)
+	e.cursor.SetPosition(newPos)
 }
 
 func (e *Editor) HasSelection() bool {
@@ -221,17 +172,13 @@ func (e *Editor) InsertAtCursor(text string) {
 		start, end := e.cursor.GetSelection()
 		length := end - start
 		deleteCmd := NewDeleteCommand(e.buffer, e.cursor, start, length)
-		deleteCmd.Execute()
+		e.executeCommand(deleteCmd)
 		e.cursor.ClearSelection()
-		e.undoStack = append(e.undoStack, deleteCmd)
 	}
 
 	pos := e.cursor.GetPosition()
 	cmd := NewInsertCommand(e.buffer, e.cursor, text, pos)
-	cmd.Execute()
-	e.undoStack = append(e.undoStack, cmd)
-	e.redoStack = make([]Command, 0)
-	e.fileManager.MarkDirty()
+	e.executeCommand(cmd)
 }
 
 func (e *Editor) DeleteAtCursor(length int) {
@@ -240,55 +187,32 @@ func (e *Editor) DeleteAtCursor(length int) {
 	}
 	pos := e.cursor.GetPosition()
 	cmd := NewDeleteCommand(e.buffer, e.cursor, pos, length)
-	cmd.Execute()
-	e.undoStack = append(e.undoStack, cmd)
-	e.redoStack = make([]Command, 0)
-	e.fileManager.MarkDirty()
+	e.executeCommand(cmd)
 }
 
 func (e *Editor) Backspace() {
 	if e.cursor.HasSelection() {
-		start, end := e.cursor.GetSelection()
-		length := end - start
-		cmd := NewDeleteCommand(e.buffer, e.cursor, start, length)
-		cmd.Execute()
-		e.cursor.ClearSelection()
-		e.undoStack = append(e.undoStack, cmd)
-		e.redoStack = make([]Command, 0)
-		e.fileManager.MarkDirty()
+		e.deleteSelection()
 		return
 	}
 
 	pos := e.cursor.GetPosition()
 	if pos > 0 {
 		cmd := NewDeleteCommand(e.buffer, e.cursor, pos-1, 1)
-		cmd.Execute()
-		e.undoStack = append(e.undoStack, cmd)
-		e.redoStack = make([]Command, 0)
-		e.fileManager.MarkDirty()
+		e.executeCommand(cmd)
 	}
 }
 
 func (e *Editor) Delete() {
 	if e.cursor.HasSelection() {
-		start, end := e.cursor.GetSelection()
-		length := end - start
-		cmd := NewDeleteCommand(e.buffer, e.cursor, start, length)
-		cmd.Execute()
-		e.cursor.ClearSelection()
-		e.undoStack = append(e.undoStack, cmd)
-		e.redoStack = make([]Command, 0)
-		e.fileManager.MarkDirty()
+		e.deleteSelection()
 		return
 	}
 
 	pos := e.cursor.GetPosition()
 	if pos < e.buffer.Length() {
 		cmd := NewDeleteCommand(e.buffer, e.cursor, pos, 1)
-		cmd.Execute()
-		e.undoStack = append(e.undoStack, cmd)
-		e.redoStack = make([]Command, 0)
-		e.fileManager.MarkDirty()
+		e.executeCommand(cmd)
 	}
 }
 
@@ -306,29 +230,40 @@ func (e *Editor) SaveAs(filePath string) error {
 }
 
 func (e *Editor) Undo() {
-	if len(e.undoStack) == 0 {
-		return
+	if cmd := e.popStack(&e.undoStack); cmd != nil {
+		cmd.Undo()
+		e.redoStack = append(e.redoStack, cmd)
 	}
-
-	lastIndex := len(e.undoStack) - 1
-	cmd := e.undoStack[lastIndex]
-	e.undoStack = e.undoStack[:lastIndex]
-
-	cmd.Undo()
-
-	e.redoStack = append(e.redoStack, cmd)
 }
 
 func (e *Editor) Redo() {
-	if len(e.redoStack) == 0 {
-		return
+	if cmd := e.popStack(&e.redoStack); cmd != nil {
+		cmd.Execute()
+		e.undoStack = append(e.undoStack, cmd)
 	}
+}
 
-	lastIndex := len(e.redoStack) - 1
-	cmd := e.redoStack[lastIndex]
-	e.redoStack = e.redoStack[:lastIndex]
-
+func (e *Editor) executeCommand(cmd Command) {
 	cmd.Execute()
-
 	e.undoStack = append(e.undoStack, cmd)
+	e.redoStack = make([]Command, 0)
+	e.fileManager.MarkDirty()
+}
+
+func (e *Editor) deleteSelection() {
+	start, end := e.cursor.GetSelection()
+	length := end - start
+	cmd := NewDeleteCommand(e.buffer, e.cursor, start, length)
+	e.executeCommand(cmd)
+	e.cursor.ClearSelection()
+}
+
+func (e *Editor) popStack(stack *[]Command) Command {
+	if len(*stack) == 0 {
+		return nil
+	}
+	lastIndex := len(*stack) - 1
+	cmd := (*stack)[lastIndex]
+	*stack = (*stack)[:lastIndex]
+	return cmd
 }
