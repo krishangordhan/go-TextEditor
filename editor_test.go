@@ -1380,3 +1380,75 @@ func TestEditor_InsertAtCursor_NoSelection(t *testing.T) {
 		t.Errorf("Expected cursor at 11, got %d", editor.GetCursorPosition())
 	}
 }
+
+func TestEditor_Copy_CopiesSelectionToClipboard(t *testing.T) {
+	mockClipboard := &MockClipboard{}
+	editor := NewEditor("Hello World")
+	editor.clipboard = mockClipboard
+
+	editor.SetCursorPosition(0)
+	editor.cursor.StartSelection()
+	editor.SetCursorPosition(5)
+
+	err := editor.Copy()
+	if err != nil {
+		t.Fatalf("Failed to copy: %v", err)
+	}
+
+	if mockClipboard.content != "Hello" {
+		t.Errorf("Expected clipboard to contain 'Hello', got '%s'", mockClipboard.content)
+	}
+}
+
+func TestEditor_Copy_NoSelection_DoesNothing(t *testing.T) {
+	mockClipboard := &MockClipboard{}
+	editor := NewEditor("Hello World")
+	editor.clipboard = mockClipboard
+
+	err := editor.Copy()
+	if err != nil {
+		t.Fatalf("Failed to copy: %v", err)
+	}
+
+	if mockClipboard.content != "" {
+		t.Errorf("Expected clipboard to be empty, got '%s'", mockClipboard.content)
+	}
+}
+
+func TestEditor_Copy_BackwardSelection_CopiesCorrectText(t *testing.T) {
+	mockClipboard := &MockClipboard{}
+	editor := NewEditor("Hello World")
+	editor.clipboard = mockClipboard
+
+	editor.SetCursorPosition(5)
+	editor.cursor.StartSelection()
+	editor.SetCursorPosition(0)
+
+	err := editor.Copy()
+	if err != nil {
+		t.Fatalf("Failed to copy: %v", err)
+	}
+
+	if mockClipboard.content != "Hello" {
+		t.Errorf("Expected clipboard to contain 'Hello', got '%s'", mockClipboard.content)
+	}
+}
+
+func TestEditor_Copy_PartialSelection_CopiesOnlySelected(t *testing.T) {
+	mockClipboard := &MockClipboard{}
+	editor := NewEditor("Hello World")
+	editor.clipboard = mockClipboard
+
+	editor.SetCursorPosition(6)
+	editor.cursor.StartSelection()
+	editor.SetCursorPosition(11)
+
+	err := editor.Copy()
+	if err != nil {
+		t.Fatalf("Failed to copy: %v", err)
+	}
+
+	if mockClipboard.content != "World" {
+		t.Errorf("Expected clipboard to contain 'World', got '%s'", mockClipboard.content)
+	}
+}
