@@ -45,13 +45,13 @@ Plan:
    - Implement Redo, add tests `Done`
    - Add keyboard shortcuts `Done`
    - Edge cases, empty undo stack, redo after new edit `Not Done. Well done all but redo after new edit`
- - Text selection
-   - Add select start and end to cursor
-   - Track selection in Editor
-   - Render selection in display
-   - Delete selection on backspace or delete
-   - Replace selection on insert
-   - Edge cases
+ - Text selection `Done`
+   - Add select start and end to cursor `Done`
+   - Track selection in Editor `Done` 
+   - Render selection in display `Done`
+   - Delete selection on backspace or delete `Done`
+   - Replace selection on insert `Done`
+   - Edge cases `Done`
  - Copy and paste
    - System clipboard library
    - Copy selection to clipboard
