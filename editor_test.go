@@ -1452,3 +1452,123 @@ func TestEditor_Copy_PartialSelection_CopiesOnlySelected(t *testing.T) {
 		t.Errorf("Expected clipboard to contain 'World', got '%s'", mockClipboard.content)
 	}
 }
+
+func TestEditor_Paste_InsertsClipboardTextAtCursor(t *testing.T) {
+	mockClipboard := &MockClipboard{content: "Inserted"}
+	editor := NewEditor("Hello World")
+	editor.clipboard = mockClipboard
+	editor.SetCursorPosition(5)
+
+	err := editor.Paste()
+	if err != nil {
+		t.Fatalf("Failed to paste: %v", err)
+	}
+
+	expected := "HelloInserted World"
+	if editor.GetText() != expected {
+		t.Errorf("Expected '%s', got '%s'", expected, editor.GetText())
+	}
+
+	if editor.GetCursorPosition() != 13 {
+		t.Errorf("Expected cursor at 13, got %d", editor.GetCursorPosition())
+	}
+}
+
+func TestEditor_Paste_EmptyClipboard_DoesNothing(t *testing.T) {
+	mockClipboard := &MockClipboard{content: ""}
+	editor := NewEditor("Hello")
+	editor.clipboard = mockClipboard
+	editor.SetCursorPosition(5)
+
+	err := editor.Paste()
+	if err != nil {
+		t.Fatalf("Failed to paste: %v", err)
+	}
+
+	if editor.GetText() != "Hello" {
+		t.Errorf("Expected 'Hello', got '%s'", editor.GetText())
+	}
+}
+
+func TestEditor_Paste_ReplacesSelection(t *testing.T) {
+	mockClipboard := &MockClipboard{content: "Bye"}
+	editor := NewEditor("Hello World")
+	editor.clipboard = mockClipboard
+
+	editor.SetCursorPosition(0)
+	editor.cursor.StartSelection()
+	editor.SetCursorPosition(5)
+
+	err := editor.Paste()
+	if err != nil {
+		t.Fatalf("Failed to paste: %v", err)
+	}
+
+	expected := "Bye World"
+	if editor.GetText() != expected {
+		t.Errorf("Expected '%s', got '%s'", expected, editor.GetText())
+	}
+
+	if editor.GetCursorPosition() != 3 {
+		t.Errorf("Expected cursor at 3, got %d", editor.GetCursorPosition())
+	}
+}
+
+func TestEditor_Paste_AtBeginning(t *testing.T) {
+	mockClipboard := &MockClipboard{content: "Start "}
+	editor := NewEditor("Text")
+	editor.clipboard = mockClipboard
+	editor.SetCursorPosition(0)
+
+	err := editor.Paste()
+	if err != nil {
+		t.Fatalf("Failed to paste: %v", err)
+	}
+
+	expected := "Start Text"
+	if editor.GetText() != expected {
+		t.Errorf("Expected '%s', got '%s'", expected, editor.GetText())
+	}
+
+	if editor.GetCursorPosition() != 6 {
+		t.Errorf("Expected cursor at 6, got %d", editor.GetCursorPosition())
+	}
+}
+
+func TestEditor_Paste_AtEnd(t *testing.T) {
+	mockClipboard := &MockClipboard{content: " End"}
+	editor := NewEditor("Text")
+	editor.clipboard = mockClipboard
+	editor.SetCursorPosition(4)
+
+	err := editor.Paste()
+	if err != nil {
+		t.Fatalf("Failed to paste: %v", err)
+	}
+
+	expected := "Text End"
+	if editor.GetText() != expected {
+		t.Errorf("Expected '%s', got '%s'", expected, editor.GetText())
+	}
+
+	if editor.GetCursorPosition() != 8 {
+		t.Errorf("Expected cursor at 8, got %d", editor.GetCursorPosition())
+	}
+}
+
+func TestEditor_Paste_MultilineText(t *testing.T) {
+	mockClipboard := &MockClipboard{content: "Line1\nLine2"}
+	editor := NewEditor("Start")
+	editor.clipboard = mockClipboard
+	editor.SetCursorPosition(5)
+
+	err := editor.Paste()
+	if err != nil {
+		t.Fatalf("Failed to paste: %v", err)
+	}
+
+	expected := "StartLine1\nLine2"
+	if editor.GetText() != expected {
+		t.Errorf("Expected '%s', got '%s'", expected, editor.GetText())
+	}
+}

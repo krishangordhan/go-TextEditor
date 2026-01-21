@@ -180,6 +180,20 @@ func (e *Editor) Copy() error {
 	return e.clipboard.Copy(text)
 }
 
+func (e *Editor) Paste() error {
+	text, err := e.clipboard.Paste()
+	if err != nil {
+		return err
+	}
+
+	if text == "" {
+		return nil
+	}
+
+	e.InsertAtCursor(text)
+	return nil
+}
+
 func (e *Editor) InsertAtCursor(text string) {
 	if e.cursor.HasSelection() {
 		start, end := e.cursor.GetSelection()
