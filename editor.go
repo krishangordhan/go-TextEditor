@@ -5,6 +5,7 @@ type Editor struct {
 	cursor      *Cursor
 	desiredCol  int
 	fileManager *FileManager
+	clipboard   Clipboard
 	undoStack   []Command
 	redoStack   []Command
 }
@@ -15,6 +16,7 @@ func NewEditor(text string) *Editor {
 		cursor:      NewCursor(),
 		desiredCol:  0,
 		fileManager: NewFileManager(),
+		clipboard:   NewClipboardManager(),
 		undoStack:   make([]Command, 0),
 		redoStack:   make([]Command, 0),
 	}
@@ -32,6 +34,7 @@ func NewEditorFromFile(filePath string) (*Editor, error) {
 		cursor:      NewCursor(),
 		desiredCol:  0,
 		fileManager: fm,
+		clipboard:   NewClipboardManager(),
 		undoStack:   make([]Command, 0),
 		redoStack:   make([]Command, 0),
 	}, nil
@@ -165,6 +168,16 @@ func (e *Editor) GetSelection() (int, int) {
 
 func (e *Editor) ClearSelection() {
 	e.cursor.ClearSelection()
+}
+
+func (e *Editor) Copy() error {
+	if !e.cursor.HasSelection() {
+		return nil
+	}
+
+	start, end := e.cursor.GetSelection()
+	text := e.buffer.Substring(start, end)
+	return e.clipboard.Copy(text)
 }
 
 func (e *Editor) InsertAtCursor(text string) {
