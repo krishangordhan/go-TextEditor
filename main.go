@@ -110,6 +110,20 @@ func main() {
 				editor.Redo()
 			}
 
+			if ev.Key == termbox.KeyCtrlC {
+				err := editor.Copy()
+				if err != nil {
+					// TODO: Handle copy errors.
+				}
+			}
+
+			if ev.Key == termbox.KeyCtrlV {
+				err := editor.Paste()
+				if err != nil {
+					// TODO: Handle paste errors.
+				}
+			}
+
 			switch ev.Key {
 			case termbox.KeyCtrlJ:
 				editor.MoveCursorLeftWithSelection()
