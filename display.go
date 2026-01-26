@@ -41,20 +41,38 @@ func (d *Display) RenderWithPrompt(prompt, input string) {
 	termbox.Flush()
 }
 
+func (d *Display) getLineNumberWidth() int {
+	lineCount := d.editor.GetBuffer().GetLineCount()
+	width := 1
+	for n := lineCount; n >= 10; n /= 10 {
+		width++
+	}
+	return width + 1
+}
+
 func (d *Display) renderEditor() {
 	d.adjustScrollForCursor()
 	termbox.Clear(termbox.ColorDefault, termbox.ColorDefault)
 
 	width, height := termbox.Size()
 	visibleLines := height - 1 // Hard code 1 line for status bar. Yes its a magic number.
-	visibleCols := width
+	lineNumWidth := d.getLineNumberWidth()
+	visibleCols := width - lineNumWidth
+
+	for i := range visibleLines {
+		lineNum := d.scrollY + i + 1
+		lineText := fmt.Sprintf("%*d ", lineNumWidth-1, lineNum)
+		for j, r := range lineText {
+			termbox.SetCell(j, i, r, termbox.ColorYellow, termbox.ColorDefault)
+		}
+	}
 
 	text := d.editor.GetText()
 	cursorPos := d.editor.GetCursorPosition()
 	hasSelection := d.editor.HasSelection()
 	selStart, selEnd := d.editor.GetSelection()
 
-	x, y := 0, 0
+	x, y := lineNumWidth, 0
 	lineNum := 0
 	colNum := 0
 
@@ -88,12 +106,12 @@ func (d *Display) renderEditor() {
 
 		if r == '\n' {
 			if i == cursorPos && colNum >= d.scrollX && colNum < d.scrollX+visibleCols {
-				termbox.SetCell(colNum-d.scrollX, y, ' ', fg, bg)
+				termbox.SetCell(lineNumWidth+colNum-d.scrollX, y, ' ', fg, bg)
 			}
 			y++
 			lineNum++
 			colNum = 0
-			x = 0
+			x = lineNumWidth
 			continue
 		}
 
@@ -107,7 +125,7 @@ func (d *Display) renderEditor() {
 
 	if cursorPos == len([]rune(text)) {
 		if y < visibleLines && colNum >= d.scrollX && colNum < d.scrollX+visibleCols {
-			termbox.SetCell(colNum-d.scrollX, y, ' ', termbox.ColorBlack, termbox.ColorWhite)
+			termbox.SetCell(lineNumWidth+colNum-d.scrollX, y, ' ', termbox.ColorBlack, termbox.ColorWhite)
 		}
 	}
 }
