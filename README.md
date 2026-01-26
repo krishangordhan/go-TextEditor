@@ -58,10 +58,9 @@ Plan:
    - Paste from clipboard at cursor `Done`
    - Update undo/redo to support this `Done`
    - Keyboard shortcutes `Done`
- - Line numbers
-   - Add line number rendering
-   - Calculate width based on line count
-   - Adjust scrolling horizontally for line numbers. And cursor?
+ - Line numbers `Done`
+   - Add line number rendering `Done`
+   - Calculate width based on line count `Done`
  - Auto indent
    - Detect indentation of current line.
    - Insert new line with same indentation
