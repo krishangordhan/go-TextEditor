@@ -199,7 +199,8 @@ func (d *Display) getCursorLineCol() (int, int) {
 func (d *Display) adjustScrollForCursor() {
 	width, height := termbox.Size()
 	visibleLines := height - 1 // Hard code 1 line for status bar. Yes its a magic number. FUck off.
-	visibleCols := width
+	lineNumWidth := d.getLineNumberWidth()
+	visibleCols := width - lineNumWidth
 
 	cursorLine, cursorCol := d.getCursorLineCol()
 
