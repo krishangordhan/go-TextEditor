@@ -1572,3 +1572,157 @@ func TestEditor_Paste_MultilineText(t *testing.T) {
 		t.Errorf("Expected '%s', got '%s'", expected, editor.GetText())
 	}
 }
+
+func TestEditor_GetCurrentLineIndentation_NoIndent(t *testing.T) {
+	editor := NewEditor("Hello\nWorld")
+	editor.SetCursorPosition(0)
+
+	indent := editor.GetCurrentLineIndentation()
+	if indent != "" {
+		t.Errorf("Expected empty indent, got %q", indent)
+	}
+}
+
+func TestEditor_GetCurrentLineIndentation_WithSpaces(t *testing.T) {
+	editor := NewEditor("    indented line\nnext line")
+	editor.SetCursorPosition(5)
+
+	indent := editor.GetCurrentLineIndentation()
+	if indent != "    " {
+		t.Errorf("Expected 4 spaces, got %q", indent)
+	}
+}
+
+func TestEditor_GetCurrentLineIndentation_WithTabs(t *testing.T) {
+	editor := NewEditor("\t\tindented line\nnext line")
+	editor.SetCursorPosition(3)
+
+	indent := editor.GetCurrentLineIndentation()
+	if indent != "\t\t" {
+		t.Errorf("Expected 2 tabs, got %q", indent)
+	}
+}
+
+func TestEditor_GetCurrentLineIndentation_MixedWhitespace(t *testing.T) {
+	editor := NewEditor("\t  mixed indent\nnext line")
+	editor.SetCursorPosition(2)
+
+	indent := editor.GetCurrentLineIndentation()
+	if indent != "\t  " {
+		t.Errorf("Expected tab + 2 spaces, got %q", indent)
+	}
+}
+
+func TestEditor_GetCurrentLineIndentation_EmptyLine(t *testing.T) {
+	editor := NewEditor("\nHello")
+	editor.SetCursorPosition(0)
+
+	indent := editor.GetCurrentLineIndentation()
+	if indent != "" {
+		t.Errorf("Expected empty indent for empty line, got %q", indent)
+	}
+}
+
+func TestEditor_GetCurrentLineIndentation_LineWithOnlyWhitespace(t *testing.T) {
+	editor := NewEditor("    \nHello")
+	editor.SetCursorPosition(2)
+
+	indent := editor.GetCurrentLineIndentation()
+	if indent != "    " {
+		t.Errorf("Expected 4 spaces, got %q", indent)
+	}
+}
+
+func TestEditor_InsertNewlineWithIndent_NoIndent(t *testing.T) {
+	editor := NewEditor("Hello")
+	editor.SetCursorPosition(5)
+
+	editor.InsertNewlineWithIndent()
+
+	expected := "Hello\n"
+	if editor.GetText() != expected {
+		t.Errorf("Expected %q, got %q", expected, editor.GetText())
+	}
+
+	if editor.GetCursorPosition() != 6 {
+		t.Errorf("Expected cursor at 6, got %d", editor.GetCursorPosition())
+	}
+}
+
+func TestEditor_InsertNewlineWithIndent_WithSpaces(t *testing.T) {
+	editor := NewEditor("    indented line")
+	editor.SetCursorPosition(17)
+
+	editor.InsertNewlineWithIndent()
+
+	expected := "    indented line\n    "
+	if editor.GetText() != expected {
+		t.Errorf("Expected %q, got %q", expected, editor.GetText())
+	}
+
+	if editor.GetCursorPosition() != 22 {
+		t.Errorf("Expected cursor at 22, got %d", editor.GetCursorPosition())
+	}
+}
+
+func TestEditor_InsertNewlineWithIndent_WithTabs(t *testing.T) {
+	editor := NewEditor("\t\tcode here")
+	editor.SetCursorPosition(11)
+
+	editor.InsertNewlineWithIndent()
+
+	expected := "\t\tcode here\n\t\t"
+	if editor.GetText() != expected {
+		t.Errorf("Expected %q, got %q", expected, editor.GetText())
+	}
+
+	if editor.GetCursorPosition() != 14 {
+		t.Errorf("Expected cursor at 14, got %d", editor.GetCursorPosition())
+	}
+}
+
+func TestEditor_InsertNewlineWithIndent_MiddleOfLine(t *testing.T) {
+	editor := NewEditor("    Hello World")
+	editor.SetCursorPosition(9) // After "Hello"
+
+	editor.InsertNewlineWithIndent()
+
+	expected := "    Hello\n     World"
+	if editor.GetText() != expected {
+		t.Errorf("Expected %q, got %q", expected, editor.GetText())
+	}
+
+	if editor.GetCursorPosition() != 14 {
+		t.Errorf("Expected cursor at 14, got %d", editor.GetCursorPosition())
+	}
+}
+
+func TestEditor_InsertNewlineWithIndent_UndoRedo(t *testing.T) {
+	editor := NewEditor("    code")
+	editor.SetCursorPosition(8)
+
+	editor.InsertNewlineWithIndent()
+
+	expected := "    code\n    "
+	if editor.GetText() != expected {
+		t.Errorf("After insert: Expected %q, got %q", expected, editor.GetText())
+	}
+
+	editor.Undo()
+	if editor.GetText() != "    code" {
+		t.Errorf("After undo: Expected '    code', got %q", editor.GetText())
+	}
+
+	if editor.GetCursorPosition() != 8 {
+		t.Errorf("After undo: Expected cursor at 8, got %d", editor.GetCursorPosition())
+	}
+
+	editor.Redo()
+	if editor.GetText() != expected {
+		t.Errorf("After redo: Expected %q, got %q", expected, editor.GetText())
+	}
+
+	if editor.GetCursorPosition() != 13 {
+		t.Errorf("After redo: Expected cursor at 13, got %d", editor.GetCursorPosition())
+	}
+}
