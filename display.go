@@ -4,13 +4,14 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/nsf/termbox-go"
+	"github.com/gdamore/tcell/v2"
 )
 
 type Display struct {
 	editor  *Editor
 	scrollX int
 	scrollY int
+	screen  tcell.Screen
 }
 
 func NewDisplay(editor *Editor) *Display {
@@ -18,27 +19,42 @@ func NewDisplay(editor *Editor) *Display {
 		editor:  editor,
 		scrollX: 0,
 		scrollY: 0,
+		screen:  nil,
 	}
 }
 
+func (d *Display) GetScreen() tcell.Screen {
+	return d.screen
+}
+
 func (d *Display) Init() error {
-	return termbox.Init()
+	screen, err := tcell.NewScreen()
+	if err != nil {
+		return err
+	}
+	if err := screen.Init(); err != nil {
+		return err
+	}
+	d.screen = screen
+	return nil
 }
 
 func (d *Display) Close() {
-	termbox.Close()
+	if d.screen != nil {
+		d.screen.Fini()
+	}
 }
 
 func (d *Display) Render() {
 	d.renderEditor()
 	d.renderStatusBar()
-	termbox.Flush()
+	d.screen.Show()
 }
 
 func (d *Display) RenderWithPrompt(prompt, input string) {
 	d.renderEditor()
 	d.renderPrompt(prompt, input)
-	termbox.Flush()
+	d.screen.Show()
 }
 
 func (d *Display) getLineNumberWidth() int {
@@ -52,18 +68,21 @@ func (d *Display) getLineNumberWidth() int {
 
 func (d *Display) renderEditor() {
 	d.adjustScrollForCursor()
-	termbox.Clear(termbox.ColorDefault, termbox.ColorDefault)
+	d.screen.Clear()
 
-	width, height := termbox.Size()
+	width, height := d.screen.Size()
 	visibleLines := height - 1 // Hard code 1 line for status bar. Yes its a magic number.
 	lineNumWidth := d.getLineNumberWidth()
 	visibleCols := width - lineNumWidth
+
+	defStyle := tcell.StyleDefault
+	lineNumStyle := defStyle.Foreground(tcell.ColorYellow)
 
 	for i := range visibleLines {
 		lineNum := d.scrollY + i + 1
 		lineText := fmt.Sprintf("%*d ", lineNumWidth-1, lineNum)
 		for j, r := range lineText {
-			termbox.SetCell(j, i, r, termbox.ColorYellow, termbox.ColorDefault)
+			d.screen.SetContent(j, i, r, nil, lineNumStyle)
 		}
 	}
 
@@ -91,22 +110,19 @@ func (d *Display) renderEditor() {
 			break
 		}
 
-		fg := termbox.ColorDefault
-		bg := termbox.ColorDefault
+		style := defStyle
 
 		if hasSelection && i >= selStart && i < selEnd {
-			fg = termbox.ColorBlack
-			bg = termbox.ColorCyan
+			style = style.Background(tcell.ColorTeal).Foreground(tcell.ColorBlack)
 		}
 
 		if i == cursorPos {
-			bg = termbox.ColorWhite
-			fg = termbox.ColorBlack
+			style = style.Background(tcell.ColorWhite).Foreground(tcell.ColorBlack)
 		}
 
 		if r == '\n' {
 			if i == cursorPos && colNum >= d.scrollX && colNum < d.scrollX+visibleCols {
-				termbox.SetCell(lineNumWidth+colNum-d.scrollX, y, ' ', fg, bg)
+				d.screen.SetContent(lineNumWidth+colNum-d.scrollX, y, ' ', nil, style)
 			}
 			y++
 			lineNum++
@@ -116,7 +132,7 @@ func (d *Display) renderEditor() {
 		}
 
 		if colNum >= d.scrollX && colNum < d.scrollX+visibleCols {
-			termbox.SetCell(x, y, r, fg, bg)
+			d.screen.SetContent(x, y, r, nil, style)
 			x++
 		}
 
@@ -125,26 +141,30 @@ func (d *Display) renderEditor() {
 
 	if cursorPos == len([]rune(text)) {
 		if y < visibleLines && colNum >= d.scrollX && colNum < d.scrollX+visibleCols {
-			termbox.SetCell(lineNumWidth+colNum-d.scrollX, y, ' ', termbox.ColorBlack, termbox.ColorWhite)
+			cursorStyle := defStyle.Background(tcell.ColorWhite).Foreground(tcell.ColorBlack)
+			d.screen.SetContent(lineNumWidth+colNum-d.scrollX, y, ' ', nil, cursorStyle)
 		}
 	}
 }
 
 func (d *Display) renderPrompt(prompt, input string) {
-	_, height := termbox.Size()
+	_, height := d.screen.Size()
 	promptY := height - 1
+
+	promptStyle := tcell.StyleDefault.Background(tcell.ColorBlue).Foreground(tcell.ColorWhite)
+	cursorStyle := tcell.StyleDefault.Background(tcell.ColorWhite).Foreground(tcell.ColorBlack)
 
 	fullPrompt := prompt + input
 	x := 0
 	for _, r := range fullPrompt {
-		termbox.SetCell(x, promptY, r, termbox.ColorWhite, termbox.ColorBlue)
+		d.screen.SetContent(x, promptY, r, nil, promptStyle)
 		x++
 	}
-	termbox.SetCell(x, promptY, ' ', termbox.ColorBlack, termbox.ColorWhite)
+	d.screen.SetContent(x, promptY, ' ', nil, cursorStyle)
 }
 
 func (d *Display) renderStatusBar() {
-	width, height := termbox.Size()
+	width, height := d.screen.Size()
 	statusY := height - 1
 
 	fm := d.editor.GetFileManager()
@@ -165,8 +185,10 @@ func (d *Display) renderStatusBar() {
 
 	rightStatus := "Ctrl+C: Copy | Ctrl+V: Paste | Ctrl+Z: Undo | Ctrl+Y: Redo | Ctrl+S: Save | Ctrl+Q: Quit "
 
+	statusStyle := tcell.StyleDefault.Background(tcell.ColorWhite).Foreground(tcell.ColorBlack)
+
 	for i := 0; i < width; i++ {
-		termbox.SetCell(i, statusY, ' ', termbox.ColorBlack, termbox.ColorWhite)
+		d.screen.SetContent(i, statusY, ' ', nil, statusStyle)
 	}
 
 	x := 0
@@ -174,7 +196,7 @@ func (d *Display) renderStatusBar() {
 		if x >= width {
 			break
 		}
-		termbox.SetCell(x, statusY, r, termbox.ColorBlack, termbox.ColorWhite)
+		d.screen.SetContent(x, statusY, r, nil, statusStyle)
 		x++
 	}
 
@@ -186,7 +208,7 @@ func (d *Display) renderStatusBar() {
 		if rightX+i >= width {
 			break
 		}
-		termbox.SetCell(rightX+i, statusY, r, termbox.ColorBlack, termbox.ColorWhite)
+		d.screen.SetContent(rightX+i, statusY, r, nil, statusStyle)
 	}
 }
 
@@ -197,7 +219,7 @@ func (d *Display) getCursorLineCol() (int, int) {
 }
 
 func (d *Display) adjustScrollForCursor() {
-	width, height := termbox.Size()
+	width, height := d.screen.Size()
 	visibleLines := height - 1 // Hard code 1 line for status bar. Yes its a magic number. FUck off.
 	lineNumWidth := d.getLineNumberWidth()
 	visibleCols := width - lineNumWidth

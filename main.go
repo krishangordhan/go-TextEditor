@@ -4,7 +4,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/nsf/termbox-go"
+	"github.com/gdamore/tcell/v2"
 )
 
 func main() {
@@ -14,7 +14,7 @@ func main() {
 	if len(os.Args) > 1 {
 		filePath := os.Args[1]
 		editor, err = NewEditorFromFile(filePath)
-		if err != nil {
+		if err != nil {   
 			log.Fatalf("Failed to open file %s: %v", filePath, err)
 		}
 	} else {
@@ -37,13 +37,14 @@ func main() {
 	display.Render()
 
 	for {
-		ev := termbox.PollEvent()
+		ev := display.GetScreen().PollEvent()
 
-		if ev.Type == termbox.EventKey {
+		switch ev := ev.(type) {
+		case *tcell.EventKey:
 			if confirmQuit {
-				if ev.Ch == 'y' || ev.Ch == 'Y' {
-					break
-				} else if ev.Ch == 'n' || ev.Ch == 'N' || ev.Key == termbox.KeyEsc {
+				if ev.Rune() == 'y' || ev.Rune() == 'Y' {
+					return
+				} else if ev.Rune() == 'n' || ev.Rune() == 'N' || ev.Key() == tcell.KeyEscape {
 					confirmQuit = false
 					display.Render()
 				}
@@ -51,11 +52,11 @@ func main() {
 			}
 
 			if inputMode {
-				if ev.Key == termbox.KeyEsc {
+				if ev.Key() == tcell.KeyEscape {
 					inputMode = false
 					inputBuffer = ""
 					display.Render()
-				} else if ev.Key == termbox.KeyEnter {
+				} else if ev.Key() == tcell.KeyEnter {
 					if inputBuffer != "" {
 						err := editor.SaveAs(inputBuffer)
 						if err != nil {
@@ -65,36 +66,38 @@ func main() {
 					inputMode = false
 					inputBuffer = ""
 					display.Render()
-				} else if ev.Key == termbox.KeyBackspace || ev.Key == termbox.KeyBackspace2 {
+				} else if ev.Key() == tcell.KeyBackspace || ev.Key() == tcell.KeyBackspace2 {
 					if len(inputBuffer) > 0 {
 						runes := []rune(inputBuffer)
 						inputBuffer = string(runes[:len(runes)-1])
 					}
 					display.RenderWithPrompt(inputPrompt, inputBuffer)
-				} else if ev.Ch != 0 {
-					inputBuffer += string(ev.Ch)
+				} else if ev.Rune() != 0 {
+					inputBuffer += string(ev.Rune())
 					display.RenderWithPrompt(inputPrompt, inputBuffer)
 				}
 				continue
 			}
 
-			if ev.Key == termbox.KeyCtrlQ {
+			if ev.Key() == tcell.KeyCtrlQ || (ev.Modifiers()&tcell.ModCtrl != 0 && ev.Rune() == 'q') {
 				if editor.GetFileManager().IsDirty() {
 					confirmQuit = true
 					display.RenderWithPrompt("Unsaved changes! Are you sure you want to quit? (y/n): ", "")
 					continue
 				}
-				break
+				return
 			}
 
-			if ev.Key == termbox.KeyCtrlS {
+			if ev.Key() == tcell.KeyCtrlS || (ev.Modifiers()&tcell.ModCtrl != 0 && ev.Rune() == 's') {
 				err := editor.Save()
 				if err != nil {
 					// TODO: Handle save errors.
 				}
+				display.Render()
+				continue
 			}
 
-			if ev.Key == termbox.KeyCtrlW {
+			if ev.Key() == tcell.KeyCtrlW || (ev.Modifiers()&tcell.ModCtrl != 0 && ev.Rune() == 'w') {
 				inputMode = true
 				inputPrompt = "Save as: "
 				inputBuffer = ""
@@ -102,66 +105,81 @@ func main() {
 				continue
 			}
 
-			if ev.Key == termbox.KeyCtrlZ {
+			if ev.Key() == tcell.KeyCtrlZ || (ev.Modifiers()&tcell.ModCtrl != 0 && ev.Rune() == 'z') {
 				editor.Undo()
+				display.Render()
+				continue
 			}
 
-			if ev.Key == termbox.KeyCtrlY {
+			if ev.Key() == tcell.KeyCtrlY || (ev.Modifiers()&tcell.ModCtrl != 0 && ev.Rune() == 'y') {
 				editor.Redo()
+				display.Render()
+				continue
 			}
 
-			if ev.Key == termbox.KeyCtrlC {
+			if ev.Key() == tcell.KeyCtrlC || (ev.Modifiers()&tcell.ModCtrl != 0 && ev.Rune() == 'c') {
 				err := editor.Copy()
 				if err != nil {
 					// TODO: Handle copy errors.
 				}
+				display.Render()
+				continue
 			}
 
-			if ev.Key == termbox.KeyCtrlV {
+			if ev.Key() == tcell.KeyCtrlV || (ev.Modifiers()&tcell.ModCtrl != 0 && ev.Rune() == 'v') {
 				err := editor.Paste()
 				if err != nil {
 					// TODO: Handle paste errors.
 				}
+				display.Render()
+				continue
 			}
 
-			switch ev.Key {
-			case termbox.KeyCtrlJ:
-				editor.MoveCursorLeftWithSelection()
-			case termbox.KeyCtrlL:
-				editor.MoveCursorRightWithSelection()
-			case termbox.KeyCtrlI:
-				editor.MoveCursorUpWithSelection()
-			case termbox.KeyCtrlK:
-				editor.MoveCursorDownWithSelection()
-			}
-
-			switch ev.Key {
-			case termbox.KeyArrowLeft:
-				editor.ClearSelection()
-				editor.MoveCursorLeft()
-			case termbox.KeyArrowRight:
-				editor.ClearSelection()
-				editor.MoveCursorRight()
-			case termbox.KeyArrowUp:
-				editor.ClearSelection()
-				editor.MoveCursorUp()
-			case termbox.KeyArrowDown:
-				editor.ClearSelection()
-				editor.MoveCursorDown()
-			case termbox.KeyBackspace, termbox.KeyBackspace2:
+			switch ev.Key() {
+			case tcell.KeyLeft:
+				if ev.Modifiers()&tcell.ModShift != 0 {
+					editor.MoveCursorLeftWithSelection()
+				} else {
+					editor.ClearSelection()
+					editor.MoveCursorLeft()
+				}
+			case tcell.KeyRight:
+				if ev.Modifiers()&tcell.ModShift != 0 {
+					editor.MoveCursorRightWithSelection()
+				} else {
+					editor.ClearSelection()
+					editor.MoveCursorRight()
+				}
+			case tcell.KeyUp:
+				if ev.Modifiers()&tcell.ModShift != 0 {
+					editor.MoveCursorUpWithSelection()
+				} else {
+					editor.ClearSelection()
+					editor.MoveCursorUp()
+				}
+			case tcell.KeyDown:
+				if ev.Modifiers()&tcell.ModShift != 0 {
+					editor.MoveCursorDownWithSelection()
+				} else {
+					editor.ClearSelection()
+					editor.MoveCursorDown()
+				}
+			case tcell.KeyBackspace, tcell.KeyBackspace2:
 				editor.Backspace()
-			case termbox.KeyDelete:
+			case tcell.KeyDelete:
 				editor.Delete()
-			case termbox.KeyEnter:
+			case tcell.KeyEnter:
 				editor.InsertAtCursor("\n")
-			case termbox.KeySpace:
-				editor.InsertAtCursor(" ")
 			default:
-				if ev.Ch != 0 {
-					editor.InsertAtCursor(string(ev.Ch))
+				if ev.Rune() == ' ' {
+					editor.InsertAtCursor(" ")
+				} else if ev.Rune() != 0 {
+					editor.InsertAtCursor(string(ev.Rune()))
 				}
 			}
 
+			display.Render()
+		case *tcell.EventResize:
 			display.Render()
 		}
 	}
