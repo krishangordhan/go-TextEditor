@@ -1,5 +1,7 @@
 package main
 
+import "strings"
+
 type Editor struct {
 	buffer      *PieceTable
 	cursor      *Cursor
@@ -206,6 +208,32 @@ func (e *Editor) InsertAtCursor(text string) {
 	pos := e.cursor.GetPosition()
 	cmd := NewInsertCommand(e.buffer, e.cursor, text, pos)
 	e.executeCommand(cmd)
+}
+
+func (e *Editor) GetCurrentLineIndentation() string {
+	pos := e.cursor.GetPosition()
+	line, _ := e.buffer.GetLineColumn(pos)
+
+	lineStart := e.buffer.GetOffsetFromLineColumn(line, 0)
+	lineEnd := lineStart + e.buffer.GetLineLength(line)
+
+	lineText := e.buffer.Substring(lineStart, lineEnd)
+
+	var indent strings.Builder
+	for _, ch := range lineText {
+		if ch == ' ' || ch == '\t' {
+			indent.WriteString(string(ch))
+		} else {
+			break
+		}
+	}
+
+	return indent.String()
+}
+
+func (e *Editor) InsertNewlineWithIndent() {
+	indent := e.GetCurrentLineIndentation()
+	e.InsertAtCursor("\n" + indent)
 }
 
 func (e *Editor) DeleteAtCursor(length int) {

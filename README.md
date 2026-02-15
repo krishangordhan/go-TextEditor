@@ -57,7 +57,7 @@ Plan:
    - Copy selection to clipboard `Done`
    - Paste from clipboard at cursor `Done`
    - Update undo/redo to support this `Done`
-   - Keyboard shortcutes `Done`
+   - Keyboard shortcutes `Done
  - Line numbers `Done`
    - Add line number rendering `Done`
    - Calculate width based on line count `Done`

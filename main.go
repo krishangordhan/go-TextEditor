@@ -14,7 +14,7 @@ func main() {
 	if len(os.Args) > 1 {
 		filePath := os.Args[1]
 		editor, err = NewEditorFromFile(filePath)
-		if err != nil {   
+		if err != nil {
 			log.Fatalf("Failed to open file %s: %v", filePath, err)
 		}
 	} else {
@@ -169,7 +169,7 @@ func main() {
 			case tcell.KeyDelete:
 				editor.Delete()
 			case tcell.KeyEnter:
-				editor.InsertAtCursor("\n")
+				editor.InsertNewlineWithIndent()
 			default:
 				if ev.Rune() == ' ' {
 					editor.InsertAtCursor(" ")
