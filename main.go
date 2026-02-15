@@ -168,6 +168,8 @@ func main() {
 				editor.Backspace()
 			case tcell.KeyDelete:
 				editor.Delete()
+			case tcell.KeyTab:
+				editor.InsertAtCursor("\t")
 			case tcell.KeyEnter:
 				editor.InsertNewlineWithIndent()
 			default:
