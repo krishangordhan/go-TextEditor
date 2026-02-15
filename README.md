@@ -61,7 +61,7 @@ Plan:
  - Line numbers `Done`
    - Add line number rendering `Done`
    - Calculate width based on line count `Done`
- - Auto indent
-   - Detect indentation of current line.
-   - Insert new line with same indentation
-   - Figure out edge cases (empty lines, mixed tabs and spaces) 
+ - Auto indent `Done`
+   - Detect indentation of current line. `Done`
+   - Insert new line with same indentation `Done`
+   - Figure out edge cases (empty lines, mixed tabs and spaces) `Not Done`

@@ -7,6 +7,8 @@ import (
 	"github.com/gdamore/tcell/v2"
 )
 
+const TabWidth = 4
+
 type Display struct {
 	editor  *Editor
 	scrollX int
@@ -91,16 +93,19 @@ func (d *Display) renderEditor() {
 	hasSelection := d.editor.HasSelection()
 	selStart, selEnd := d.editor.GetSelection()
 
-	x, y := lineNumWidth, 0
+	y := 0
 	lineNum := 0
 	colNum := 0
 
 	for i, r := range []rune(text) {
 		if lineNum < d.scrollY {
-			if r == '\n' {
+			switch r {
+			case '\n':
 				lineNum++
 				colNum = 0
-			} else {
+			case '\t':
+				colNum += TabWidth - (colNum % TabWidth)
+			default:
 				colNum++
 			}
 			continue
@@ -127,13 +132,22 @@ func (d *Display) renderEditor() {
 			y++
 			lineNum++
 			colNum = 0
-			x = lineNumWidth
+			continue
+		}
+
+		if r == '\t' {
+			tabStop := TabWidth - (colNum % TabWidth)
+			for range tabStop {
+				if colNum >= d.scrollX && colNum < d.scrollX+visibleCols {
+					d.screen.SetContent(lineNumWidth+colNum-d.scrollX, y, ' ', nil, style)
+				}
+				colNum++
+			}
 			continue
 		}
 
 		if colNum >= d.scrollX && colNum < d.scrollX+visibleCols {
-			d.screen.SetContent(x, y, r, nil, style)
-			x++
+			d.screen.SetContent(lineNumWidth+colNum-d.scrollX, y, r, nil, style)
 		}
 
 		colNum++
